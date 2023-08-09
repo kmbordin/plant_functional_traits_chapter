@@ -142,3 +142,62 @@ data %>%
         plot.title = element_text(hjust = 0.5),
         axis.text=element_text(size=15))
 #dev.off()
+# CWM----
+
+cwm.filter <- function (x, trait) {
+  data <- x %>% 
+    select(trait)  %>%
+    separate(trait,into = paste0(trait, 1:5), sep = ",")%>%
+    gather(key = "variable", value = "driver", starts_with(trait), na.rm = TRUE)%>%
+    mutate_all(~na_if(., "")) %>%
+    drop_na(driver)
+
+fd2 <- data %>%
+  count(driver) %>%
+  mutate(frequencia = (n / sum(n))*100) %>% 
+  mutate(driver = replace(driver, driver == "negative", "Negative")) %>%
+  mutate(driver = replace(driver, driver == "positive", "Positive")) %>%
+  mutate(driver = replace(driver, driver == "ns", "No relationship")) 
+  
+fd2$driver <- factor(fd2$driver, levels = c("Positive", "Negative", "No relationship"))
+fd2 <- fd2%>%
+  drop_na()
+#fd2$driver <- reorder(fd2$driver, -fd2$frequencia)
+
+
+#tiff("results/traits_FD.tiff", units="in", width=6.5, height=8.5, res=300)
+title = paste0("Effect of ",trait," on productivity")
+plot <- ggplot(fd2, aes(x = fct_infreq(driver), y=frequencia), colour="steelblue")+
+  geom_bar(stat= "identity", fill="steelblue")+
+  #scale_y_continuous(breaks = seq(0, 16, by = 2))+
+  #scale_x_discrete(labels=c( "Positive","Negative", "No relationship"))+
+  
+  #coord_flip()+
+  labs(x = trait, y = "Frequency (%)", title = title) +  theme_minimal()  +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5),
+        axis.text=element_text(size=15))
+ggsave(filename = paste0("results/grafico_",trait,".png"), plot = plot, units="in", width=5, height=5, dpi=300)
+
+#dev.off()
+}
+names(data)
+cwm.filter(data, "CWM_LA")
+cwm.filter(data, "CWM_SLA")
+cwm.filter(data, "CWM_LMA")
+cwm.filter(data, "CWM_LDMC")
+cwm.filter(data, "CWM_WD")
+cwm.filter(data, "CWM_LNC")
+cwm.filter(data, "CWM_LCC")
+cwm.filter(data, "CWM_LPC")
+cwm.filter(data, "CWM_seed.mass")
+cwm.filter(data, "CWM_height")
+cwm.filter(data, "CWM_root.mass")
+cwm.filter(data, "CWM_leaf.tickness")
+cwm.filter(data, "CWM_RGR")
+cwm.filter(data, "CWM_Dmax")
+cwm.filter(data, "canopy_height")
+
+
+
+
