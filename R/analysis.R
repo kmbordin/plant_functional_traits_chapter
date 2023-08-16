@@ -1,6 +1,8 @@
 # analises from PFT chapter
 library(tidyverse)
 #data <- read.csv(here::here("processed_data", "analises-08.08.23.csv"))
+#data_raw <- read.csv(here::here("processed_data", "total.csv"))
+#unique(data_raw$Authors)
 data_raw <- read.csv(here::here("processed_data", "analises-14.08.23.csv"))
 levels(as.factor(data_raw$tipo_ecossistema.eg.campo.floresta.savana.etc.))
 ecosys = c("forest", "grassland","steppe","medow-steppes", "dune grassland","forest-steppe ecotones")
