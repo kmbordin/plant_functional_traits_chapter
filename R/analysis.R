@@ -1,5 +1,9 @@
 # analises from PFT chapter
 library(tidyverse)
+library(gtExtras)
+library(gt)
+library(janitor)
+library(doBy)
 #data <- read.csv(here::here("processed_data", "analises-08.08.23.csv"))
 #data_raw <- read.csv(here::here("processed_data", "total.csv"))
 #unique(data_raw$Authors)
@@ -67,7 +71,7 @@ data <- data_raw %>%
 levels(as.factor(data$ecosystem))
 levels(as.factor(data$CWM_SLA))
 
-
+# trait correction -----
 sla = c("specificleafarea", "SLA","specificleafarea(SLA)")
 lm = c("LEAF_MASS", "leaffreshmass","leaf_mass","LM(leafdrymass)")
 lma = c( "leaf_mass_area",  "leafmassperunitarea", "LMA")
@@ -93,8 +97,9 @@ pigment = c("pigment_composition", "Area_based_pigment_content", "Pigment_concen
 n.p = c("N/P_ratio", "NPreference")
 lpc = c("P", "LPC", "LNP")
 na = c("month)", "", "coniferas", "photosynthesis_rate","remotesensingvariables","andplantcellulosecontent(CEC)")
-# FD --------
-fd <- tibble (traits.fd = data$traits_FD) %>%
+# FD  --------
+fd <- tibble (traits.fd = data$traits_FD, 
+              ecosystem = data$ecosystem) %>%
   separate(traits.fd,into = paste0("fd", 1:30), sep = ",")%>%
   gather(key = "variable", value = "driver", starts_with("fd"), na.rm = TRUE)%>%
   mutate(across(c(driver), ~str_replace_all(., " ", ""))) %>%
@@ -125,6 +130,10 @@ fd <- tibble (traits.fd = data$traits_FD) %>%
   drop_na(driver)
 
 fd2 <- fd %>%
+  group_by(ecosystem) %>% 
+  filter(ecosystem != "ecotones") %>% 
+  mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
+  mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
   count(driver) %>%
   mutate(frequencia = (n / sum(n))*100)
 
@@ -140,13 +149,13 @@ fd2 <- fd2 %>%
 
 
 
-#tiff("results/traits_FD.tiff", units="in", width=7, height=12, res=300)
+#png("results/traits_FD_ecosystem.png", units="in", width=9, height=16, res=300)
 
 ggplot(fd2, aes(x = driver, y=frequencia, fill=type))+
   geom_bar(stat= "identity", width = 0.4)+
   scale_x_discrete(limits=rev)+
   coord_flip()+
-  facet_wrap(~ type, nrow = 3, ncol = 1, scales="free_y") + 
+  facet_wrap(~ type+ecosystem, scales="free_y", nrow = 5, ncol = 1) + 
   scale_y_continuous(breaks = seq(0, 14, by = 1.5))+
   scale_fill_manual(values = c("#009E73","#0072B2","#D55E00"))+
   labs(x = "", y = "Frequency (%)", title = "Traits used to calculate FD") +  theme_minimal()  +
@@ -154,20 +163,27 @@ ggplot(fd2, aes(x = driver, y=frequencia, fill=type))+
         plot.title = element_text(hjust = 0.5, size = 15),
         axis.text=element_text(size=15),
         strip.text = element_text(size = 15))
-#dev.off()
+dev.off()
  
-data
-#tiff("results/FD_effect.tiff", units="in", width=6.5, height=5.5, res=300)
+#data
+#png("results/FD_effect_ecosystem.png", units="in", width=9, height=5.5, res=300)
+
 data %>%
-  group_by(FD)%>%
+  filter(ecosystem != "ecotones") %>% 
+  mutate(FD = replace(FD, FD == "negative", "Negative")) %>%
+  mutate(FD = replace(FD, FD == "ns", "No relationship")) %>%
+  mutate(FD = replace(FD, FD == "positive", "Positive")) %>%
+  mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
+  mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
+  group_by(ecosystem) %>% 
   mutate(FD = as.factor(FD)) %>%
   count(FD) %>%
   drop_na(FD) %>%
   filter(FD != "yes") %>% 
   ggplot(aes(x=FD, y=n, fill=FD))+geom_bar(stat= "identity") +
   labs(x = "", y = "Number of papers", title = "Effect of FD on productivity") + 
-  scale_x_discrete(labels=c("Positive", "No relationship","Negative" ))+
-  scale_fill_manual(values = c("#882255","#CC6677", "#332288"))+
+  scale_fill_manual(values = c( "#332288","#CC6677","#882255"))+
+  facet_grid(~ecosystem)+
   theme_minimal()  +
   theme(legend.position = "none",
         plot.title = element_text(hjust = 0.5),
@@ -179,25 +195,29 @@ data %>%
 
 cwm.filter <- function (x, trait) {
   data <- x %>% 
-    select(trait)  %>%
+    select(trait,ecosystem)  %>%
     separate(trait,into = paste0(trait, 1:5), sep = ",")%>%
     gather(key = "variable", value = "driver", starts_with(trait), na.rm = TRUE)%>%
     mutate_all(~na_if(., "")) %>%
     drop_na(driver)
 
 fd2 <- data %>%
-  count(driver) %>%
+  mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
+  mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
+  filter(ecosystem != "ecotones") %>% 
+  count( ecosystem, driver) %>%
+  group_by(ecosystem) %>% 
   mutate(frequencia = (n / sum(n))*100) %>% 
   mutate(driver = replace(driver, driver == "negative", "Negative")) %>%
   mutate(driver = replace(driver, driver == "positive", "Positive")) %>%
   mutate(driver = replace(driver, driver == "ns", "No relationship")) 
   
-fd2$driver <- factor(fd2$driver, levels = c("Positive", "Negative", "No relationship"))
+fd2$driver <- factor(fd2$driver, levels = c("Negative", "No relationship","Positive"))
 fd2 <- fd2%>%
   drop_na()
 # safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", 
 #                              "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
-safe_colorblind_palette <- c("#882255","#CC6677", "#332288")
+safe_colorblind_palette <- c("#332288","#CC6677","#882255")
 
 names(safe_colorblind_palette) <- levels(fd2$driver)
 colScale <- scale_fill_manual(name = "driver",values = safe_colorblind_palette)
@@ -207,6 +227,7 @@ plot <- ggplot(fd2, aes(x = fct_infreq(driver), y=frequencia, fill=driver))+
   geom_bar(stat= "identity")+
   #scale_x_discrete(labels=c( "Positive","Negative", "No relationship"))+
   colScale+
+  facet_grid(~ecosystem)+
   labs(x = trait, y = "Frequency (%)", title = title) +  theme_minimal()  +
   theme(aspect.ratio = 1,
         legend.position = "none",
@@ -215,7 +236,7 @@ plot <- ggplot(fd2, aes(x = fct_infreq(driver), y=frequencia, fill=driver))+
         axis.title.y =element_text(size=15), 
         axis.title.x =element_text(size=15),
         axis.title = element_text(size=15))
-ggsave(filename = paste0("results/grafico_",trait,".png"), plot = plot, units="in", width=5, height=5, dpi=300)
+ggsave(filename = paste0("fig_cwm/grafico_",trait,".png"), plot = plot, units="in", width=8, height=5, dpi=300)
 
 }
 names(data)
@@ -243,18 +264,13 @@ cwm.filter(data, "canopy_height")
 
 # tabela com frequencias ---------------
 
-# Carregar os pacotes
-library(gt)
-library(janitor)
-library(dplyr)
-
-# Criar um exemplo de dataframe
-dados <- data %>% 
-  select(CWM_LA: CWM_carbon13)
-
-# Transformar os dados em um formato adequado para contagem
-dados_contagem <- dados %>%
-  pivot_longer(everything(), names_to = "Variables", values_to = "Valores") %>%
+cwm.site <- function (x) {
+  data <- x %>% 
+  mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
+  mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
+  filter(ecosystem != "ecotones") %>%
+  select(CWM_LA: CWM_carbon13) %>% 
+  pivot_longer(everything(), names_to = c("Variables"), values_to = "Valores") %>%
   mutate(Valores = replace(Valores, Valores == "ns", "No relationship")) %>%
   mutate(Valores = replace(Valores, Valores == "positive", "Positive")) %>%
   mutate(Valores = replace(Valores, Valores == "negative", "Negative")) %>%
@@ -262,35 +278,47 @@ dados_contagem <- dados %>%
   summarize(`Number of papers` = n()) %>% 
   drop_na(Valores) %>% 
   group_by(Variables) %>% 
-  filter(sum(`Number of papers`)>2) %>% 
+  #filter(sum(`Number of papers`)>2) %>% 
   mutate(Variables = replace(Variables, Variables == "CWM_leaf.tickness", "CWM leaf_tickness")) %>%
   mutate(Variables = replace(Variables, Variables == "CWM_root.mass", "CWM_root mass")) %>%
   mutate(Variables = replace(Variables, Variables == "CWM_seed.mass", "CWM_seed mass")) %>% 
-  mutate(Variables = replace(Variables, Variables == "CWM_LCC_LNC", "CWM_LCC LNC")) %>% 
-  mutate(Variables = replace(Variables, Variables == "CWM_LCC_LA", "CWM_LCC LA")) 
+  mutate(Variables = replace(Variables, Variables == "CWM_LCC_LNC", "CWM_LCC:LNC")) %>% 
+  mutate(Variables = replace(Variables, Variables == "CWM_LCC_LA", "CWM_LCC:LA")) %>% 
+  filter(Valores != "positive(temperate),negative(subtropical)") 
+  return(data)
+  }
   
+grass = data %>% 
+  filter (ecosystem=="grassland") %>% 
+  cwm.site() %>% 
+  mutate(ecosystem = "Grassland")
+fores = data %>% 
+  filter (ecosystem=="forest") %>% 
+  cwm.site() %>% 
+  mutate(ecosystem = "Forest")
+
+dados_contagem <- bind_rows(grass,fores)
   
 dados_contagem$Variables <-   sub("_", " ", dados_contagem$Variables)
-  
-unique(dados_contagem$Variables)
+dados_contagem %>%
+  group_by(Variables) %>% 
+  filter(`Number of papers` >2) %>% 
+  mutate(frequencia = round(`Number of papers`/sum(`Number of papers`) * 100, digits = 1)) %>% 
+  #mutate(frequencia = `Number of papers`) %>% 
+  select(Variables, Valores, frequencia, ecosystem) %>% 
+  rename(Relationship = Valores) %>% 
+  pivot_wider(names_from = Variables, values_from = frequencia) %>% 
+  mutate_at(vars(contains("CWM")), replace_na, 0) %>% 
+  rename_at(vars(contains('CWM')), funs(sub('CWM', '', .))) %>% 
+  gt()%>%  
+  tab_header(title = md("**Functional traits as predictors of productivity**"),
+             subtitle = "Frequency of mentions and trait effect on productivity, based on community weighted mean values") %>% 
+tab_style(style = cell_fill(color = "gray90"),
+            locations = cells_column_labels(columns = everything())) %>% 
+  cols_align(align = "center",columns = everything())%>%
+gtsave(filename = "results/CWM_effects_ecosys_perc.rtf")
 
 # Criar a tabela com o pacote gt
-dados_contagem %>%
-  filter(Valores != "positive(temperate),negative(subtropical)") %>% 
-  group_by(Variables) %>% 
-  mutate(frequencia = round(`Number of papers`/sum(`Number of papers`) * 100, digits = 2)) %>% 
-  gt(groupname_col = "Variables", rowname_col = "Valores") %>%
-  cols_label(Variables = "Variables", Valores = "Mean traits", `Number of papers` = "Number of papers",frequencia = "Frequency (%)") %>%  
-  tab_header(title = md("**Functional traits as predictors of productivity**"),
-    subtitle = "Based on community weighted mean values (i.e., mass effect)") %>% 
-  tab_style(style = cell_fill(color = "gray90"),
-    locations = cells_column_labels(columns = everything())) %>% 
-  tab_style(style = cell_text(style = "italic"),
-    locations = cells_body()) %>% 
-  gt_plt_bar_pct(column = frequencia, scaled = TRUE,fill = "blue", background = "lightblue") %>% 
-  cols_align(align = "center",columns = everything()) %>% 
-  gtsave(filename = "results/CWM_effects.html")  
-
 dados_contagem %>%
   filter(Valores != "positive(temperate),negative(subtropical)") %>% 
   group_by(Variables) %>% 
@@ -305,4 +333,4 @@ dados_contagem %>%
             locations = cells_body()) %>% 
   #gt_plt_bar_pct(column = frequencia, scaled = TRUE,fill = "blue", background = "lightblue") %>% 
   cols_align(align = "center",columns = everything()) %>% 
-  gtsave(filename = "results/CWM_effects.rtf")
+  gtsave(filename = "results/CWM_effects_long_contagem.rtf")
