@@ -303,20 +303,22 @@ dados_contagem$Variables <-   sub("_", " ", dados_contagem$Variables)
 dados_contagem %>%
   group_by(Variables) %>% 
   filter(`Number of papers` >2) %>% 
-  mutate(frequencia = round(`Number of papers`/sum(`Number of papers`) * 100, digits = 1)) %>% 
-  #mutate(frequencia = `Number of papers`) %>% 
-  select(Variables, Valores, frequencia, ecosystem) %>% 
-  rename(Relationship = Valores) %>% 
+  #mutate(frequencia = round(`Number of papers`/sum(`Number of papers`) * 100, digits = 1)) %>% 
+  mutate(frequencia = `Number of papers`) %>% 
+  select(Variables, Valores, ecosystem, frequencia) %>% 
+  rename(Relationship = Valores, 
+         Ecosystem = ecosystem) %>% 
   pivot_wider(names_from = Variables, values_from = frequencia) %>% 
   mutate_at(vars(contains("CWM")), replace_na, 0) %>% 
   rename_at(vars(contains('CWM')), funs(sub('CWM', '', .))) %>% 
   gt()%>%  
   tab_header(title = md("**Functional traits as predictors of productivity**"),
              subtitle = "Frequency of mentions and trait effect on productivity, based on community weighted mean values") %>% 
-tab_style(style = cell_fill(color = "gray90"),
+  tab_style(style = cell_fill(color = "gray90"),
             locations = cells_column_labels(columns = everything())) %>% 
+  cols_move(columns = Relationship, after = Ecosystem)%>% 
   cols_align(align = "center",columns = everything())%>%
-gtsave(filename = "results/CWM_effects_ecosys_perc.rtf")
+gtsave(filename = "results/CWM_effects_ecosys.rtf")
 
 # Criar a tabela com o pacote gt
 dados_contagem %>%
