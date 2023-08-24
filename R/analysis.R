@@ -7,6 +7,7 @@ library(doBy)
 #data <- read.csv(here::here("processed_data", "analises-08.08.23.csv"))
 #data_raw <- read.csv(here::here("processed_data", "total.csv"))
 #unique(data_raw$Authors)
+# dataset raw -------
 data_raw <- read.csv(here::here("processed_data", "analises-14.08.23.csv"))
 levels(as.factor(data_raw$tipo_ecossistema.eg.campo.floresta.savana.etc.))
 ecosys = c("forest", "grassland","steppe","medow-steppes", "dune grassland","forest-steppe ecotones")
@@ -104,28 +105,29 @@ fd <- tibble (traits.fd = data$traits_FD,
   gather(key = "variable", value = "driver", starts_with("fd"), na.rm = TRUE)%>%
   mutate(across(c(driver), ~str_replace_all(., " ", ""))) %>%
   mutate(driver = replace(driver, driver  %in% sla , "SLA")) %>%
-  mutate(driver = replace(driver, driver  %in% lma , "LMA"))%>%
+  mutate(driver = replace(driver, driver  %in% lma , "SLA"))%>% #decidimos tornar LMA para SLA
   mutate(driver = replace(driver, driver  %in% lm , "LM"))%>%
   mutate(driver = replace(driver, driver  %in% lnc , "LNC")) %>%
   mutate(driver = replace(driver, driver  %in% n.c , "LC:LN")) %>%
   mutate(driver = replace(driver, driver  %in% wd , "WD")) %>%
   mutate(driver = replace(driver, driver  %in% height , "Height")) %>%
-  mutate(driver = replace(driver, driver  %in% dec , "deciduousness")) %>%
-  mutate(driver = replace(driver, driver  %in% growth , "growth rate")) %>%
-  mutate(driver = replace(driver, driver  %in% seed , "seeds")) %>%
-  mutate(driver = replace(driver, driver  %in% crown , "crown")) %>%
-  mutate(driver = replace(driver, driver  %in% tree.size , "tree size")) %>%
+  mutate(driver = replace(driver, driver  %in% dec , "Deciduousness")) %>%
+  mutate(driver = replace(driver, driver  %in% growth , "Growth rate")) %>%
+  mutate(driver = replace(driver, driver  %in% seed , "Seeds")) %>%
+  mutate(driver = replace(driver, driver  %in% crown , "Crown")) %>%
+  mutate(driver = replace(driver, driver  %in% tree.size , "Tree size")) %>%
   mutate(driver = replace(driver, driver  %in% lcc , "LCC")) %>%
-  mutate(driver = replace(driver, driver  %in% form , "growth form")) %>%
-  mutate(driver = replace(driver, driver  %in% tolerance , "stress tolerance")) %>%
-  mutate(driver = replace(driver, driver  %in% root , "root")) %>%
+  mutate(driver = replace(driver, driver  %in% form , "Growth form")) %>%
+  mutate(driver = replace(driver, driver  %in% tolerance , "Stress tolerance")) %>%
+  mutate(driver = replace(driver, driver  %in% root , "Root")) %>%
   mutate(driver = replace(driver, driver  %in% la , "LA")) %>%
   mutate(driver = replace(driver, driver  %in% lt , "LT")) %>%
-  mutate(driver = replace(driver, driver  %in% vessel , "vessels")) %>%
-  mutate(driver = replace(driver, driver  %in% pigment , "pigments")) %>%
+  mutate(driver = replace(driver, driver  %in% vessel , "Vessels")) %>%
+  mutate(driver = replace(driver, driver  %in% pigment , "Pigments")) %>%
   mutate(driver = replace(driver, driver  %in% n.p , "LNC:LPC")) %>%
   mutate(driver = replace(driver, driver  %in% lpc , "LPC")) %>%
   mutate(driver = replace(driver, driver  %in% na , "")) %>%
+  mutate(driver = replace(driver, driver == "age", "Age")) %>%
   mutate_all(~na_if(., "")) %>%
   drop_na(driver)
 
@@ -137,36 +139,37 @@ fd2 <- fd %>%
   count(driver) %>%
   mutate(frequencia = (n / sum(n))*100)
 
-struc = c("Height","LDMC","WD","vessels","LT","growth form","crown","LM","root","LA","SLA","stress tolerance","deciduousness","LT","LMA","seeds")
-nutrients = c("LCaC","LNC:LPC","pigments","LC:LN","LCC","LPC","LNC")
-demograp = c("age","growth rate","tree size")
+struc = c("Height","LDMC","WD","Vessels","LT","Growth form","Crown","LM","Root","LA","SLA","Stress tolerance","Deciduousness","LT","Seeds")
+nutrients = c("LCaC","LNC:LPC","Pigments","LC:LN","LCC","LPC","LNC")
+demograp = c("Age","Growth rate","Tree size")
 
 fd2 <- fd2 %>% 
   mutate(type = ifelse(driver %in% struc, "Structural traits",NA),
          type = ifelse(driver %in%nutrients, "Nutrient traits",type),
          type = ifelse(driver %in%demograp, "Demographic traits",type)) %>% 
-  arrange(type, -frequencia)
+  arrange(type, -frequencia) %>% 
+  mutate(type = as.factor(type)) %>% 
+  rename(`Trait type` = type) %>% 
+  rename(Ecosystem = ecosystem)
 
 
+#png("results/traits_FD_ecosystem.png", units="in", width=8, height=10, res=300)
 
-#png("results/traits_FD_ecosystem.png", units="in", width=9, height=16, res=300)
-
-ggplot(fd2, aes(x = driver, y=frequencia, fill=type))+
+ggplot(fd2, aes(x = driver, y=frequencia, fill= Ecosystem))+
   geom_bar(stat= "identity", width = 0.4)+
   scale_x_discrete(limits=rev)+
   coord_flip()+
-  facet_wrap(~ type+ecosystem, scales="free_y", nrow = 5, ncol = 1) + 
-  scale_y_continuous(breaks = seq(0, 14, by = 1.5))+
-  scale_fill_manual(values = c("#009E73","#0072B2","#D55E00"))+
+  facet_wrap(~ `Trait type`, scales="free_y", nrow = 3, ncol = 1) + 
+  #scale_y_continuous(breaks = seq(0, 14, by = 1.5))+
+  scale_fill_manual(values = c("#009E73","#D55E00"))+
   labs(x = "", y = "Frequency (%)", title = "Traits used to calculate FD") +  theme_minimal()  +
-  theme(legend.position = "none",
+  theme(legend.position = c(0.905,0.905),
         plot.title = element_text(hjust = 0.5, size = 15),
         axis.text=element_text(size=15),
         strip.text = element_text(size = 15))
-dev.off()
+#dev.off()
  
-#data
-#png("results/FD_effect_ecosystem.png", units="in", width=9, height=5.5, res=300)
+png("results/FD_effect_ecosystem.png", units="in", width=6, height=5.5, res=300)
 
 data %>%
   filter(ecosystem != "ecotones") %>% 
@@ -177,21 +180,23 @@ data %>%
   mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
   group_by(ecosystem) %>% 
   mutate(FD = as.factor(FD)) %>%
+  rename(Ecosystem = ecosystem) %>% 
   count(FD) %>%
   drop_na(FD) %>%
   filter(FD != "yes") %>% 
-  ggplot(aes(x=FD, y=n, fill=FD))+geom_bar(stat= "identity") +
+  ggplot(aes(x=FD, y=n, fill=Ecosystem))+geom_bar(stat= "identity") +
   labs(x = "", y = "Number of papers", title = "Effect of FD on productivity") + 
-  scale_fill_manual(values = c( "#332288","#CC6677","#882255"))+
-  facet_grid(~ecosystem)+
+  scale_fill_manual(values = c("#009E73","#D55E00"),guide = guide_legend(
+    direction = "horizontal",
+    title.position = "top",title.hjust = 0.5))+  
   theme_minimal()  +
-  theme(legend.position = "none",
+  theme(legend.position = "bottom",
         plot.title = element_text(hjust = 0.5),
         axis.text=element_text(size=15),
         axis.title.y =element_text(size=15), 
         axis.title.x =element_text(size=15))
-#dev.off()
-# CWM----
+dev.off()
+# CWM ----
 
 cwm.filter <- function (x, trait) {
   data <- x %>% 
@@ -262,7 +267,7 @@ cwm.filter(data, "CWM_leaf.tickness")
 cwm.filter(data, "CWM_Dmax")
 cwm.filter(data, "canopy_height")
 
-# tabela com frequencias ---------------
+# tabela com frequencias ---------
 
 cwm.site <- function (x) {
   data <- x %>% 
@@ -336,3 +341,21 @@ dados_contagem %>%
   #gt_plt_bar_pct(column = frequencia, scaled = TRUE,fill = "blue", background = "lightblue") %>% 
   cols_align(align = "center",columns = everything()) %>% 
   gtsave(filename = "results/CWM_effects_long_contagem.rtf")
+
+# categories ----
+cat = readxl::read_excel(here::here("results", "categorisation.xlsx"))
+
+cat %>% 
+  mutate(Category = replace(Category, Category == "Pigment", "Pigments")) %>%
+  gt() %>% 
+  cols_label(Category = "Categories", `Words included` = "Words included") %>%  
+  tab_header(title = md("**Functional traits grouped into categories**"),
+             subtitle = "Traits used to calculate Functional Diversity") %>% 
+  cols_align(align = "center",columns = everything()) %>% 
+  
+  tab_style(style = cell_fill(color = "gray90"),
+            locations = cells_column_labels(columns = everything())) %>% 
+  #gtsave(filename = "results/categorisation.html")
+  gtsave(filename = "results/categorisation.rtf")
+
+
