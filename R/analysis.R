@@ -77,25 +77,25 @@ sla = c("specificleafarea", "SLA","specificleafarea(SLA)")
 lm = c("LEAF_MASS", "leaffreshmass","leaf_mass","LM(leafdrymass)")
 lma = c( "leaf_mass_area",  "leafmassperunitarea", "LMA")
 lnc = c("leafNperarea", "Nitrogen_fraction(%)", "N", "leafδ15N")
-n.c = c("razaoC:Nfolha","leafC:Nratio", "LC:N", "leaf_carbon_nitrogen_ratio", "razãocarbono:nitrogênioofplantlitter", "C:N", "razãoC:Nfolha","leafCN","plantCandNconcentration(CCandNC)")
+n.c = c("razaoC:Nfolha","leafC:Nratio", "LC:N", "leaf_carbon_nitrogen_ratio", "razãocarbono:nitrogênioofplantlitter", "C:N", "razãoC:Nfolha","leafCN","plantCandNconcentration(CCandNC)", "LCC_LNC")
 wd = c("stemspecificdensity.", "stemdrymattercontent", "Wood_specific_gravity(WSG)", "wooddensity", "wd")
 height = c("High_understory_layer_cover(h.cover)","plantheight", "Maximum_plant_height", "maximumheight", "plant_height_reproductive", 
            "maximum_height", "H", "height", "canopyheight", "CANOPY_HEIGHT",
-           "max_height_growth_rate","plantheight(H)")
+           "max_height_growth_rate","plantheight(H)", "canopy_height")
 dec = c("deciduousness", "deciduousness(Dec)", "leaf_habit", "leafseasonality", "leaf_longevity(LL", "LIFE_SPAN")
-crown = c("corwnarea", "Can.\ncover")
-growth = c("relative-growth-rate", "diam_growth", "maximum_growth_rate")
-seed = c("seedlenght", "dispersalunitlenght", "seed_germination(SG)", "SM(seed_mass)", "seedmass", "seed_mass", "numberofseedsofthereproductiveunit", "SM", "leafprolinecontent", "FSMH")
-tree.size = c("maximum_stem_diameter(Dmax)", "DBH", "BA", "Density")
-lcc = c("leafCperdrymass", "Carbon_fraction(%)", "carbon_fractions", "LCC","Leaf_carbon_content", "leaf_carbon_content","leafcarbon13")
+crown = c("corwnarea", "Can.\ncover", "crown.complement")
+growth = c("relative-growth-rate", "diam_growth", "maximum_growth_rate", "RGR")
+seed = c("seedlenght", "dispersalunitlenght", "seed_germination(SG)", "SM(seed_mass)", "seedmass", "seed_mass", "numberofseedsofthereproductiveunit", "SM", "leafprolinecontent", "FSMH", "seed mass", "seed.mass")
+tree.size = c("maximum_stem_diameter(Dmax)", "DBH", "BA", "Density", "Dmax")
+lcc = c("leafCperdrymass", "Carbon_fraction(%)", "carbon_fractions", "LCC","Leaf_carbon_content", "leaf_carbon_content","leafcarbon13", "carbon13")
 form = c("growthfrom", "growth_habit", "lateral_spread", "leafangle")
-tolerance = c("shade_or_drought_tolerance", "drought.toler", "shade.toler", "fire_resistance", "fire_tolerance", "resprout_ability")
-root = c("root_density", "mycorrhizal_association", "root_biomass", "ROOT_DEPTH","specificrootlenght","rootdrymattercontent","RTF","AD","RTD","RA")
+tolerance = c("shade_or_drought_tolerance", "drought.toler", "shade.toler", "fire_resistance", "fire_tolerance", "resprout_ability", "waterlogging_tolerance")
+root = c("root_density", "mycorrhizal_association", "root_biomass", "ROOT_DEPTH","specificrootlenght","rootdrymattercontent","RTF","AD","RTD","RA", "avg root_diameter", "RLD", "root area", "root mass", "specific root_length", "SRL", "specific_root_length", "root_area", "avg_root_diameter", "root.mass")
 la = c("leafsize", "leaf_size", "leaflenght")
-lt = c("leafthickness", "Leaf_tissue_density", "Leaf_thickness")
+lt = c("leafthickness", "Leaf_tissue_density", "Leaf_thickness", "leaf_tickness", "leaf.tissue.density", "leaf.tickness")
 vessel = c("woodvessellenght", "stemconduitdensity")
-pigment = c("pigment_composition", "Area_based_pigment_content", "Pigment_concentration")
-n.p = c("N/P_ratio", "NPreference")
+pigment = c("pigment_composition", "Area_based_pigment_content", "Pigment_concentration", "chlorophyllab", "Chlorophyll")
+n.p = c("N/P_ratio", "NPreference", "LPC_LNC")
 lpc = c("P", "LPC", "LNP")
 na = c("month)", "", "coniferas", "photosynthesis_rate","remotesensingvariables","andplantcellulosecontent(CEC)")
 # FD  --------
@@ -139,6 +139,7 @@ fd2 <- fd %>%
   count(driver) %>%
   mutate(frequencia = (n / sum(n))*100)
 
+
 struc = c("Height","LDMC","WD","Vessels","LT","Growth form","Crown","LM","Root","LA","SLA","Stress tolerance","Deciduousness","LT","Seeds")
 nutrients = c("LCaC","LNC:LPC","Pigments","LC:LN","LCC","LPC","LNC")
 demograp = c("Age","Growth rate","Tree size")
@@ -169,7 +170,21 @@ ggplot(fd2, aes(x = driver, y=frequencia, fill= Ecosystem))+
         strip.text = element_text(size = 15))
 #dev.off()
  
-png("results/FD_effect_ecosystem.png", units="in", width=6, height=5.5, res=300)
+
+fd3 <- data %>%
+  filter(ecosystem != "ecotones") %>% 
+  mutate(FD = replace(FD, FD == "negative", "Negative")) %>%
+  mutate(FD = replace(FD, FD == "ns", "No relationship")) %>%
+  mutate(FD = replace(FD, FD == "positive", "Positive")) %>%
+  mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
+  mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
+  rename(Ecosystem = ecosystem) %>% 
+  group_by(Ecosystem) %>% 
+  mutate(FD = as.factor(FD)) %>% 
+  count(FD) %>%
+  drop_na(FD) %>%
+  mutate(frequencia = (n / sum(n))*100) %>% 
+  filter(FD != "yes") 
 
 data %>%
   filter(ecosystem != "ecotones") %>% 
@@ -177,25 +192,31 @@ data %>%
   mutate(FD = replace(FD, FD == "ns", "No relationship")) %>%
   mutate(FD = replace(FD, FD == "positive", "Positive")) %>%
   mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
-  mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
-  group_by(ecosystem) %>% 
-  mutate(FD = as.factor(FD)) %>%
   rename(Ecosystem = ecosystem) %>% 
-  count(FD) %>%
-  drop_na(FD) %>%
-  filter(FD != "yes") %>% 
-  ggplot(aes(x=FD, y=n, fill=Ecosystem))+geom_bar(stat= "identity") +
-  labs(x = "", y = "Number of papers", title = "Effect of FD on productivity") + 
+  group_by(Ecosystem) %>% 
+  mutate(FD = as.factor(FD)) %>% 
+  drop_na(FD)
+g = fd3 %>% filter(Ecosystem == "Grassland") 
+g1 = chisq.test(g$n)
+
+f = fd3 %>% filter(Ecosystem == "Forest")
+f1 = chisq.test(f$n)
+
+#png("results/FD_effect_ecosystem.png", units="in", width=6, height=5.5, res=300)
+fd3%>% 
+  ggplot(aes(x=FD, y=frequencia, fill=Ecosystem))+geom_bar(stat= "identity") +
+  labs(x = "", y = "Frequency of papers (%)", title = "Effect of FD on productivity") + 
   scale_fill_manual(values = c("#009E73","#D55E00"),guide = guide_legend(
     direction = "horizontal",
     title.position = "top",title.hjust = 0.5))+  
+  ylim (0,100) + 
   theme_minimal()  +
   theme(legend.position = "bottom",
         plot.title = element_text(hjust = 0.5),
         axis.text=element_text(size=15),
         axis.title.y =element_text(size=15), 
         axis.title.x =element_text(size=15))
-dev.off()
+#dev.off()
 # CWM ----
 
 cwm.filter <- function (x, trait) {
@@ -210,7 +231,7 @@ fd2 <- data %>%
   mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
   mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
   filter(ecosystem != "ecotones") %>% 
-  count( ecosystem, driver) %>%
+  count(ecosystem, driver) %>%
   group_by(ecosystem) %>% 
   mutate(frequencia = (n / sum(n))*100) %>% 
   mutate(driver = replace(driver, driver == "negative", "Negative")) %>%
@@ -275,6 +296,7 @@ cwm.site <- function (x) {
   mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
   filter(ecosystem != "ecotones") %>%
   select(CWM_LA: CWM_carbon13) %>% 
+  rename_all(funs(stringr::str_replace_all( ., "CWM_", ""))) %>% 
   pivot_longer(everything(), names_to = c("Variables"), values_to = "Valores") %>%
   mutate(Valores = replace(Valores, Valores == "ns", "No relationship")) %>%
   mutate(Valores = replace(Valores, Valores == "positive", "Positive")) %>%
@@ -282,48 +304,69 @@ cwm.site <- function (x) {
   group_by(Variables, Valores) %>%
   summarize(`Number of papers` = n()) %>% 
   drop_na(Valores) %>% 
-  group_by(Variables) %>% 
-  #filter(sum(`Number of papers`)>2) %>% 
-  mutate(Variables = replace(Variables, Variables == "CWM_leaf.tickness", "CWM leaf_tickness")) %>%
-  mutate(Variables = replace(Variables, Variables == "CWM_root.mass", "CWM_root mass")) %>%
-  mutate(Variables = replace(Variables, Variables == "CWM_seed.mass", "CWM_seed mass")) %>% 
-  mutate(Variables = replace(Variables, Variables == "CWM_LCC_LNC", "CWM_LCC:LNC")) %>% 
-  mutate(Variables = replace(Variables, Variables == "CWM_LCC_LA", "CWM_LCC:LA")) %>% 
-  filter(Valores != "positive(temperate),negative(subtropical)") 
+  filter(Valores != "positive(temperate),negative(subtropical)") %>% 
   return(data)
   }
-  
+
+data$CWM_LMA <- ifelse(data$CWM_LMA == "negative", "MUDAR", data$CWM_LMA) 
+data$CWM_LMA <- ifelse(data$CWM_LMA == "positive", "negative", data$CWM_LMA)
+data$CWM_LMA <- ifelse(data$CWM_LMA == "MUDAR", "positive", data$CWM_LMA)
 grass = data %>% 
-  filter (ecosystem=="grassland") %>% 
+  filter (ecosystem=="grassland") %>%
   cwm.site() %>% 
-  mutate(ecosystem = "Grassland")
+  mutate(ecosystem = "Grassland") 
+
 fores = data %>% 
   filter (ecosystem=="forest") %>% 
   cwm.site() %>% 
   mutate(ecosystem = "Forest")
 
-dados_contagem <- bind_rows(grass,fores)
+dados_contagem <- bind_rows(grass,fores) %>% 
+  mutate(Variables = str_remove(Variables, "CWM_")) %>% 
+  mutate(Variables = str_remove(Variables, "CWM ")) %>% 
+  mutate(Variables = replace(Variables, Variables  %in% lma , "SLA"))%>% #decidimos tornar LMA para SLA
+  mutate(Variables = replace(Variables, Variables  %in% height , "Height")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% seed , "Seeds")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% crown , "Crown")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% tree.size , "Tree size")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% lcc , "LCC")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% root , "Root")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% lt , "LT")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% vessel , "Vessels")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% pigment , "Pigments")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% n.p , "LNC:LPC")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% lpc , "LPC")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% tolerance , "Tolerance")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% growth , "Growth")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% na , "")) %>%
+  mutate(Variables = replace(Variables, Variables == "age", "Age")) %>% 
+  mutate(Variables = replace(Variables, Variables == "LCC_LA", "LCC:LA")) %>% 
+  mutate(Variables = replace(Variables, Variables == "LCC_LNC", "LCC:LNC")) %>% 
+  group_by(ecosystem, Variables, Valores) %>% 
+  summarise(`Number of papers` = sum(`Number of papers`))
   
-dados_contagem$Variables <-   sub("_", " ", dados_contagem$Variables)
+  
 dados_contagem %>%
+  #group_by(ecosystem) %>% 
   group_by(Variables) %>% 
-  filter(`Number of papers` >2) %>% 
-  #mutate(frequencia = round(`Number of papers`/sum(`Number of papers`) * 100, digits = 1)) %>% 
+  filter(n() >2) %>% 
+  mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 1)) %>% 
   mutate(frequencia = `Number of papers`) %>% 
+  #ungroup() %>% 
   select(Variables, Valores, ecosystem, frequencia) %>% 
   rename(Relationship = Valores, 
          Ecosystem = ecosystem) %>% 
   pivot_wider(names_from = Variables, values_from = frequencia) %>% 
-  mutate_at(vars(contains("CWM")), replace_na, 0) %>% 
-  rename_at(vars(contains('CWM')), funs(sub('CWM', '', .))) %>% 
+  select(order(colnames(.))) %>% 
   gt()%>%  
   tab_header(title = md("**Functional traits as predictors of productivity**"),
-             subtitle = "Frequency of mentions and trait effect on productivity, based on community weighted mean values") %>% 
+             subtitle = "Number of mentions and trait effect on productivity, based on community weighted mean values") %>% 
   tab_style(style = cell_fill(color = "gray90"),
             locations = cells_column_labels(columns = everything())) %>% 
   cols_move(columns = Relationship, after = Ecosystem)%>% 
-  cols_align(align = "center",columns = everything())%>%
-gtsave(filename = "results/CWM_effects_ecosys.rtf")
+  cols_align(align = "center",columns = everything()) %>% 
+  sub_missing(columns = 1:15,missing_text = "0") %>%
+gtsave(filename = "results/CWM_effects_ecosys_perc.rtf")
 
 # Criar a tabela com o pacote gt
 dados_contagem %>%
