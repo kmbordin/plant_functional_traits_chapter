@@ -351,7 +351,14 @@ all =  data %>%
   filter(`Number of papers` >2) %>% 
   ungroup() %>% 
   mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 1)) %>% 
-  arrange(desc(`Number of papers`)) 
+  arrange(desc(`Number of papers`)) %>% 
+  gt() %>% 
+  tab_header(title = md("**Functional traits as predictors of productivity**"),
+             subtitle = "Number of mentions and trait effect on productivity, based on community weighted mean values") %>% 
+  tab_style(style = cell_fill(color = "gray90"),
+            locations = cells_column_labels(columns = everything())) %>% 
+  cols_align(align = "center",columns = everything()) %>% 
+  gtsave(filename = "results/CWM_effects_semecosys.rtf")
   
 dados_contagem <- bind_rows(grass,fores) %>% 
   mutate(Variables = str_remove(Variables, "CWM_")) %>% 
@@ -377,7 +384,6 @@ dados_contagem <- bind_rows(grass,fores) %>%
   group_by(ecosystem, Variables, Valores) %>% 
   summarise(`Number of papers` = sum(`Number of papers`))
   
-  
 dados_contagem = dados_contagem %>%
   #group_by(ecosystem) %>% 
   group_by(Variables) %>% 
@@ -401,16 +407,22 @@ dados_contagem <- dados_contagem %>% select(matches(traits.selected)) %>%
   filter(row_number() <=n()-1) %>% 
   arrange(Ecosystem,Relationship)
 
-  dados_contagem %>% 
-  gt()%>%  
+perc_cwm <- dados_contagem %>% 
+  group_by(Ecosystem) %>% 
+  select(-Relationship) %>% 
+  mutate_all(funs((./sum(.))*100)) %>% 
+  mutate_if(is.numeric, round, 1)  %>% 
+  ungroup() %>% 
+  mutate(Relationship = dados_contagem$Relationship) %>% 
+  relocate(Relationship, .after = Ecosystem)
+
+gt(perc_cwm) %>%  
   tab_header(title = md("**Functional traits as predictors of productivity**"),
              subtitle = "Number of mentions and trait effect on productivity, based on community weighted mean values") %>% 
   tab_style(style = cell_fill(color = "gray90"),
             locations = cells_column_labels(columns = everything())) %>% 
-  cols_move(columns = Relationship, after = Ecosystem)%>% 
   cols_align(align = "center",columns = everything()) %>% 
-  sub_missing(columns = 1:15,missing_text = "0") %>%
-gtsave(filename = "results/CWM_effects_ecosys.rtf")
+  gtsave(filename = "results/CWM_effects_ecosys_perc.rtf")
 
 # Criar a tabela com o pacote gt
 dados_contagem %>%
