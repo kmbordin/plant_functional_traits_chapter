@@ -139,6 +139,17 @@ fd2 <- fd %>%
   count(driver) %>%
   mutate(frequencia = (n / sum(n))*100)
 
+x %>% 
+  mutate(frequencia = round(frequencia, digits = 1)) %>% 
+  rename(`Trait type` = driver,
+             `Number of papers` = n,
+             Frequency = frequencia) %>% 
+gt()%>%  
+  tab_header(title = md("**Functional traits used to obtain the Functional Diversity**"),  subtitle = "Number and frequency of mentions of each trait used to calculate functional diversity ") %>% 
+  tab_style(style = cell_fill(color = "gray90"),
+            locations = cells_column_labels(columns = everything())) %>% 
+  cols_align(align = "center",columns = everything()) %>% 
+  gtsave(filename = "results/traits_to_FD_semecosys.rtf")
 
 struc = c("Height","LDMC","WD","Vessels","LT","Growth form","Crown","LM","Root","LA","SLA","Stress tolerance","Deciduousness","LT","Seeds")
 nutrients = c("LCaC","LNC:LPC","Pigments","LC:LN","LCC","LPC","LNC")
@@ -152,6 +163,21 @@ fd2 <- fd2 %>%
   mutate(type = as.factor(type)) %>% 
   rename(`Trait type` = type) %>% 
   rename(Ecosystem = ecosystem)
+
+fd2 %>% 
+  arrange(Ecosystem, `Trait type`,desc(frequencia)) %>% 
+  group_by(Ecosystem) %>% 
+  mutate(frequencia = round(frequencia, digits = 1)) %>% 
+  rename(`Trait used` = driver,
+         `Number of papers` = n,
+         Frequency = frequencia) %>% 
+  gt()%>%  
+  tab_header(title = md("**Functional traits used to obtain the Functional Diversity**"),
+             subtitle = "Number and frequency of mentions of each trait used to calculate functional diversity ") %>% 
+  tab_style(style = cell_fill(color = "gray90"),
+            locations = cells_column_labels(columns = everything())) %>% 
+  cols_align(align = "center",columns = everything()) %>% 
+  gtsave(filename = "results/traits_to_FD.rtf")
 
 
 #png("results/traits_FD_ecosystem.png", units="in", width=8, height=10, res=300)
@@ -241,8 +267,6 @@ fd2 <- data %>%
 fd2$driver <- factor(fd2$driver, levels = c("Negative", "No relationship","Positive"))
 fd2 <- fd2%>%
   drop_na()
-# safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", 
-#                              "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
 safe_colorblind_palette <- c("#332288","#CC6677","#882255")
 
 names(safe_colorblind_palette) <- levels(fd2$driver)
@@ -289,7 +313,6 @@ cwm.filter(data, "CWM_Dmax")
 cwm.filter(data, "canopy_height")
 
 # tabela com frequencias ---------
-
 cwm.site <- function (x) {
   data <- x %>% 
   mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
@@ -320,7 +343,16 @@ fores = data %>%
   filter (ecosystem=="forest") %>% 
   cwm.site() %>% 
   mutate(ecosystem = "Forest")
-
+all =  data %>% 
+  cwm.site() %>% 
+  select(-Valores) %>% 
+  mutate(Variables = replace(Variables, Variables == "LMA" , "SLA"))%>%
+  summarise(`Number of papers` = sum(`Number of papers`)) %>% 
+  filter(`Number of papers` >2) %>% 
+  ungroup() %>% 
+  mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 1)) %>% 
+  arrange(desc(`Number of papers`)) 
+  
 dados_contagem <- bind_rows(grass,fores) %>% 
   mutate(Variables = str_remove(Variables, "CWM_")) %>% 
   mutate(Variables = str_remove(Variables, "CWM ")) %>% 
@@ -346,11 +378,10 @@ dados_contagem <- bind_rows(grass,fores) %>%
   summarise(`Number of papers` = sum(`Number of papers`))
   
   
-dados_contagem %>%
+dados_contagem = dados_contagem %>%
   #group_by(ecosystem) %>% 
   group_by(Variables) %>% 
-  filter(n() >2) %>% 
-  mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 1)) %>% 
+#mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 1)) %>% 
   mutate(frequencia = `Number of papers`) %>% 
   #ungroup() %>% 
   select(Variables, Valores, ecosystem, frequencia) %>% 
@@ -358,6 +389,17 @@ dados_contagem %>%
          Ecosystem = ecosystem) %>% 
   pivot_wider(names_from = Variables, values_from = frequencia) %>% 
   select(order(colnames(.))) %>% 
+  relocate(Ecosystem, .before = CaC) %>% 
+  relocate(Relationship, .after = Ecosystem) %>% 
+  replace(is.na(.), 0) %>% 
+  add_row(Ecosystem = "Total", Relationship = "Total", summarise(., across(where(is.numeric), sum)))
+traits.selected = dados_contagem %>% filter (Ecosystem == "Total") %>% 
+  select_if(~any(. > 2))
+
+x %>% select(%in% colnames(traits.selected))
+
+  select(which(colSums(CaC:WD) > 2)) %>%  
+  
   gt()%>%  
   tab_header(title = md("**Functional traits as predictors of productivity**"),
              subtitle = "Number of mentions and trait effect on productivity, based on community weighted mean values") %>% 
@@ -393,7 +435,7 @@ cat %>%
   gt() %>% 
   cols_label(Category = "Categories", `Words included` = "Words included") %>%  
   tab_header(title = md("**Functional traits grouped into categories**"),
-             subtitle = "Traits used to calculate Functional Diversity") %>% 
+             subtitle = "Traits used to calculate Functional Diversity and Community Weighted Mean values") %>% 
   cols_align(align = "center",columns = everything()) %>% 
   
   tab_style(style = cell_fill(color = "gray90"),
