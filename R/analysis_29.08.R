@@ -387,7 +387,7 @@ dados_contagem <- bind_rows(grass,fores) %>%
 dados_contagem = dados_contagem %>%
   #group_by(ecosystem) %>% 
   group_by(Variables) %>% 
-  mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 1)) %>% 
+  #mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 1)) %>% 
   mutate(frequencia = `Number of papers`) %>% 
   #ungroup() %>% 
   select(Variables, Valores, ecosystem, frequencia) %>% 
