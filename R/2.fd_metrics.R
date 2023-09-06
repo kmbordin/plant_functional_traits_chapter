@@ -1,7 +1,15 @@
 # fd evaluation -----
-
+#precisa carregar esse script antes
+here::here("1.load_harmonise.R")
+#isso e para criar apenas as regioes tropicais e temperadas
+regiao_estudo = c("temperate", "tropical", "subtropical")
+#nova matriz, corrigindo e agrupando traits, com a info de regiao
+#essa matriz fica ao final com os traits em linhas, separadamente, além da info de ecossistema e regiao
 fd <- tibble (traits.fd = data$traits_FD, 
-              ecosystem = data$ecosystem) %>%
+              ecosystem = data$ecosystem,
+              region = data$regiao) %>%
+  #filter(region %in% regiao_estudo) %>% 
+  mutate(region = replace(region, region == "subtropical" , "tropical")) %>%
   mutate(across(c(traits.fd), ~str_replace_all(., ";", ","))) %>%
   separate(traits.fd,into = paste0("fd", 1:30), sep = ",")%>%
   gather(key = "variable", value = "driver", starts_with("fd"), na.rm = TRUE)%>%
@@ -34,6 +42,7 @@ fd <- tibble (traits.fd = data$traits_FD,
   drop_na(driver) %>% 
   filter (driver != "Age")
 
+# aqui remove a info de fd em ecotonos e calcula as frequencias para 3 ou mais citacoes noes estudos
 fd2 <- fd %>%
   group_by(ecosystem) %>% 
   filter(ecosystem != "ecotones") %>% 
@@ -45,7 +54,8 @@ fd2 <- fd %>%
   mutate(frequencia = round(frequencia, digits = 0)) 
 
 
-x %>% 
+#x %>%  criada a partir do anterior, sem group_by(ecosystem)! para saber os valores totais de traits usados na fd
+fd2 %>% 
   rename(`Trait type` = driver,
          `Number of papers` = n,
          Frequency = frequencia) %>% 
@@ -56,6 +66,8 @@ x %>%
   cols_align(align = "center",columns = everything()) #%>% 
 #gtsave(filename = "results/traits_to_FD_semecosys.rtf")
 
+#agrupamento dos traits nas classes de Laughlin et al 2014 
+#para a figura e tabela
 roots = c("Root quantity")
 seeds = c("Seed size")
 life.history = c("Growth rate","Growth form","Tree size")
@@ -75,6 +87,7 @@ fd2 <- fd2 %>%
   rename(`Trait type` = type) %>% 
   rename(Ecosystem = ecosystem)
 
+# cria a gt table com as infos da matriz anterior
 fd2 %>% 
   arrange(Ecosystem, `Trait type`,desc(frequencia)) %>% 
   group_by(Ecosystem) %>% 
@@ -90,13 +103,15 @@ fd2 %>%
   cols_align(align = "center",columns = everything()) %>% 
   gtsave(filename = "results/traits_to_FD.rtf")
 
+
+#cria a figura mostrando os traits usados na fd para campo ou floresta
 #png("results/traits_FD_ecosystem.png", units="in", width=8, height=10, res=300)
 
 ggplot(fd2, aes(x = driver, y=frequencia, fill= Ecosystem))+
   geom_bar(stat= "identity", width = 0.4)+
-  scale_x_discrete(limits=rev)+
   coord_flip()+
-  facet_wrap(~ `Trait type`, scales="free_y", ncol = 1, ) + 
+  facet_wrap(facets = ~(`Trait type`), scales="free_y", ncol = 1) + 
+  scale_x_discrete(limits=rev)+
   scale_fill_manual(values = c("#009E73","#D55E00"))+
   labs(x = "", y = "Frequency (%)", title = "Traits used to calculate FD") +  theme_minimal()  +
   theme(legend.position = c(0.9,0.05),
@@ -105,9 +120,13 @@ ggplot(fd2, aes(x = driver, y=frequencia, fill= Ecosystem))+
         strip.text = element_text(size = 15))
 #dev.off()
 
-
+# matriz para gerar a figura de efeito da fd sobre a produtividade, com ou sem as regioes
+# tambem sera usada pra calcular o chi2
+#para o chi2 total, apenas remover o group_by(ecosystem)
 fd3 <- data %>%
   filter(ecosystem != "ecotones") %>% 
+  #filter(regiao %in% regiao_estudo) %>% 
+  #mutate(regiao = replace(regiao, regiao == "subtropical" , "tropical")) %>%
   mutate(FD = replace(FD, FD == "negative", "Negative")) %>%
   mutate(FD = replace(FD, FD == "ns", "No relationship")) %>%
   mutate(FD = replace(FD, FD == "positive", "Positive")) %>%

@@ -1,4 +1,4 @@
-pacman::p_load(tidyverse,gt,gtExtras,janitor,doBy)
+pacman::p_load(tidyverse,gt,gtExtras,janitor,doBy,here)
 # load data and harmonise table -----
 #data <- read.csv(here::here("processed_data", "analises-08.08.23.csv"))
 #data_raw <- read.csv(here::here("processed_data", "total.csv"))
@@ -8,7 +8,7 @@ data_raw <- read.csv(here::here("processed_data", "analises-06.09.23.csv"))
 
 levels(as.factor(data_raw$tipo_ecossistema.eg.campo.floresta.savana.etc.))
 
-ecosys = c("forest", "grassland","steppe","medow-steppes", "dune grassland","forest-steppe ecotones","agricultural/semi-natural grasslands","forest;shrublands", "forest;woodlands","forest;tundra")
+ecosys = c("forest", "grassland","steppe","medow-steppes", "dune grassland","forest-steppe ecotones","agricultural/semi-natural grasslands","forest;shrublands", "forest;woodlands","forest;tundra", "forest-steppe ecotones","forest, shrubland, grassland, savanna,","forests, shrubland and sparse grasslands")
 posi = c("positiva", "positive", "positivo")
 neg = c("negativa", "negative", "negativo")
 outros.neg = c("negative(SLA andLDMC)","negative(SLA,height_rep,LCC)")
