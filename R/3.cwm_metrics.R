@@ -52,14 +52,15 @@ all <-  data %>%
   mutate(Variables = replace(Variables, Variables=="root.mass" , "Root quantity")) %>%
   filter(`Number of papers` >= 3) %>% 
   mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0)) %>% 
+  rename(`Frequency (%)` = frequencia) %>% 
   arrange(desc(`Number of papers`)) %>% 
   gt() %>% 
-  tab_header(title = md("**Functional traits as predictors of productivity**"),
-             subtitle = "Number of mentions and trait effect on productivity, based on community weighted mean values") %>% 
+  tab_header(title = md("**Functional dominance as predictor of productivity**"),
+             subtitle = "Frequency and number of mentions of functional dominance effects on productivity") %>% 
   tab_style(style = cell_fill(color = "gray90"),
             locations = cells_column_labels(columns = everything())) %>% 
-  cols_align(align = "center",columns = everything()) %>% 
-  gtsave(filename = "results/CWM_effects_semecosys.rtf")
+  cols_align(align = "center",columns = everything()) #%>% 
+  #gtsave(filename = "results/CWM_effects_semecosys.rtf")
 
 dados_contagem <- bind_rows(grass,fores) %>% 
   mutate(Variables = str_remove(Variables, "CWM_")) %>% 
@@ -109,8 +110,9 @@ traits.selected = dados_contagem %>% filter (Ecosystem == "Total") %>%
   colnames()
 
 #voltar para a matriz anterior e filtra somente os traits selecionados
-dados_contagem <- dados_contagem %>% select(matches(traits.selected)) %>% 
-  filter(row_number() <=n()-1) %>% 
+dados_contagem <- dados_contagem %>% 
+  select(matches(traits.selected)) %>% 
+  filter(row_number() <=n()-1) %>% #remove a ultima linha
   arrange(Ecosystem,Relationship)
 
 #numero de papers que citam os cwm e a relacao encontrada
@@ -121,13 +123,15 @@ count_cwm <- dados_contagem %>%
   mutate_if(is.numeric, round, 0)  %>% 
   ungroup() %>% 
   mutate(Relationship = dados_contagem$Relationship) %>% 
-  relocate(Relationship, .after = Ecosystem)
+  relocate(Relationship, .after = Ecosystem) %>% 
+  select(-`LNC:LPC`)
+
 gt(count_cwm) %>%  
-  tab_header(title = md("**Functional traits as predictors of productivity**"),
-             subtitle = "Number of mentions and trait effect on productivity, based on community weighted mean values") %>% 
+  tab_header(title = md("**Functional dominance as predictor of productivity**"),
+             subtitle = "Frequency and number of mentions of functional dominance effects on productivity") %>% 
   tab_style(style = cell_fill(color = "gray90"),
             locations = cells_column_labels(columns = everything())) %>% 
-  cols_align(align = "center",columns = everything()) %>% 
-  gtsave(filename = "results/CWM_effects_ecosys.rtf")
+  cols_align(align = "center",columns = everything()) #%>% 
+  #gtsave(filename = "results/CWM_effects_ecosys.rtf")
 
 
