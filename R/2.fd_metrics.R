@@ -5,6 +5,9 @@ here::here("1.load_harmonise.R")
 regiao_estudo = c("temperate", "tropical", "subtropical")
 #nova matriz, corrigindo e agrupando traits, com a info de regiao
 #essa matriz fica ao final com os traits em linhas, separadamente, além da info de ecossistema e regiao
+estoque = filter (data, prod.metric == 2)
+produc = filter (data, prod.metric == 1)
+#data = produc
 fd <- tibble (traits.fd = data$traits_FD, 
               ecosystem = data$ecosystem,
               region = data$regiao) %>%
@@ -53,6 +56,19 @@ fd2 <- fd %>%
   mutate(frequencia = (n / sum(n))*100) %>% 
   mutate(frequencia = round(frequencia, digits = 0)) 
 
+#aqui inclui a regiao de estudo
+fd2 <- fd %>%
+  filter (region %in% regiao_estudo) %>% 
+  group_by(ecosystem, region) %>% 
+  filter(ecosystem != "ecotones") %>% 
+  mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
+  mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
+  count(driver) %>%
+  filter(n>=3) %>% 
+  mutate(frequencia = (n / sum(n))*100) %>% 
+  mutate(frequencia = round(frequencia, digits = 0)) 
+
+
 fd2 %>% 
   #x %>%  #criada a partir do anterior, sem group_by(ecosystem)! para saber os valores totais de traits usados na fd
   rename(`Trait type` = driver,
@@ -95,19 +111,22 @@ fd2 %>%
          `Number of papers` = n,
          `Frequency (%)` = frequencia) %>% 
   gt()%>%  
-  tab_header(title = md("**Functional traits used to calculate the Functional Diversity**"),
+  tab_header(title = md("**Functional traits used to calculate the functional diversity**"),
              subtitle = "Number and frequency of mentions of each trait used to calculate functional diversity") %>% 
   tab_style(style = cell_fill(color = "gray90"),
             locations = cells_column_labels(columns = everything())) %>% 
-  cols_align(align = "center",columns = everything()) %>% 
-  gtsave(filename = "results/traits_to_FD.rtf")
+  cols_align(align = "center",columns = everything()) #%>% 
+  #gtsave(filename = "results/traits_to_FD.rtf")
 
-#cria a figura mostrando os traits usados na fd para campo ou floresta
-# png("results/traits_FD_ecosystem.png", units="in", width=6, height=10, res=300)
+#cria a figura mostrando os traits usados na fd para campo ou florestahttp://127.0.0.1:8573/graphics/plot_zoom_png?width=1920&height=852
+#png("results/traits_FD_ecosystem.png", units="in", width=17, height=10, res=300)
 ggplot(fd2, aes(x = reorder(driver, -frequencia), y= frequencia , fill= Ecosystem))+
-  geom_bar(stat= "identity", width = 0.4)+
+  facet_wrap(facets = ~(`Trait type`), scales="free_y", ncol = 4) + 
+  geom_bar(stat= "identity", width = 0.4, position = "dodge")+
+  labs(x = "", y = "Frequency of papers (%)", title = "Effect of functional diversity on productivity") + 
+  geom_text(aes(label=n), vjust=0.4, hjust=-0.5, position = position_dodge(width = 0.5), colour="black", size=5) +
+  lims(y=c(0,20))+
   coord_flip()+
-  facet_wrap(facets = ~(`Trait type`), scales="free_y", ncol = 1) + 
   scale_x_discrete(limits=rev)+
   scale_fill_manual(values = c("#009E73","#D55E00"))+
   labs(x = "", y = "Frequency (%)", title = "Traits used to calculate functional diversity") +  theme_minimal()  +
@@ -115,7 +134,7 @@ ggplot(fd2, aes(x = reorder(driver, -frequencia), y= frequencia , fill= Ecosyste
     #legend.position = c(0.9,0.05),
     axis.text=element_text(size=15),
     strip.text = element_text(size = 15), 
-    plot.title = element_text(size = 20, face = "bold"))
+    plot.title = element_text(size = 20, face = "bold", hjust = 0.5))
 #dev.off()
 
 # matriz para gerar a figura de efeito da fd sobre a produtividade, com ou sem as regioes
@@ -137,23 +156,24 @@ fd3 <- data %>%
   drop_na(FD) %>%
   mutate(frequencia = (n / sum(n))*100) %>% 
   filter(FD != "yes") 
-chisq.test(fd3$n) #X-squared = 4.9545, df = 2, p-value = 0.08397
+chisq.test(fd3$n) #X-squared = 8.5217, df = 5, p-value = 0.1297
 
 g = fd3 %>% filter(Ecosystem == "Grassland") 
 g1 = chisq.test(g$n) #X-squared = 1.3, df = 2, p-value = 0.522
 
 f = fd3 %>% filter(Ecosystem == "Forest")
-f1 = chisq.test(f$n) #X-squared = 4, df = 2, p-value = 0.1353
+f1 = chisq.test(f$n) #X-squared = 5.8462, df = 2, p-value = 0.05377
 
 
 #png("results/FD_effect_ecosystem.png", units="in", width=6, height=5.5, res=300)
 fd3%>% 
-  ggplot(aes(x=FD, y=frequencia, fill=Ecosystem))+geom_bar(stat= "identity") +
+  ggplot(aes(x=Ecosystem, y=frequencia, fill=FD))+geom_bar(stat= "identity") +
   labs(x = "", y = "Frequency of papers (%)", title = "Effect of functional diversity on productivity") + 
-  scale_fill_manual(values = c("#009E73","#D55E00"),guide = guide_legend(
+  scale_fill_manual(values = c("#44AA99","#888888","#AA4499"),guide = guide_legend(
     direction = "horizontal",
     title.position = "top",title.hjust = 0.5))+  
   ylim (0,100) + 
+  geom_text(aes(label=n), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) +
   theme_minimal()  +
   theme(legend.position = "bottom",
         plot.title = element_text(hjust = 0.5,size = 15, face = "bold"),
@@ -161,7 +181,14 @@ fd3%>%
         axis.title.y =element_text(size=15), 
         axis.title.x =element_text(size=15))
 #dev.off()
-
+#p1 = total
+#p2 = produtividade apenas
+#p3 = estoque apenas
+# library(patchwork)
+# plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
+# png('results/FDonprod.png', units="in", width=13, height=12, res=300)
+# plots
+# dev.off()
 # ----------
 data
 conjunto <- tibble (traits.fd = data$traits_FD, 
