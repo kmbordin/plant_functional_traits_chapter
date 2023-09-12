@@ -4,7 +4,7 @@ pacman::p_load(tidyverse,gt,gtExtras,janitor,doBy,here)
 #data_raw <- read.csv(here::here("processed_data", "total.csv"))
 
 # dataset raw -------
-data_raw <- read.csv(here::here("processed_data", "analises-06.09.23.csv"))
+data_raw <- read.csv(here::here("processed_data", "analises-12.09.23.csv"))
 
 levels(as.factor(data_raw$tipo_ecossistema.eg.campo.floresta.savana.etc.))
 
@@ -24,6 +24,7 @@ data <- data_raw %>%
   filter(X2ndo_filtro != "NAO") %>% 
   rename(ecosystem = tipo_ecossistema.eg.campo.floresta.savana.etc.,
          FD = diversidade_funcional.NA.ns.positiva.negativa.,
+         prod.metric = produtividade_medida.produtividade.1.estoque.2.ouNA,
          traits_FD = traits_FD.traitsincluidos.,
          CWM_LA = cwmLA.NA.ns.positiva.negativa.,
          CWM_SLA = cwmSLA.NA.ns.positiva.negativa.,
