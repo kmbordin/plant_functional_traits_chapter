@@ -1,8 +1,10 @@
-# fd evaluation -----
+# fd evaluation 
 #precisa carregar esse script antes
 here::here("1.load_harmonise.R")
 #isso e para criar apenas as regioes tropicais e temperadas
 regiao_estudo = c("temperate", "tropical", "subtropical")
+
+# fd-------
 #nova matriz, corrigindo e agrupando traits, com a info de regiao
 #essa matriz fica ao final com os traits em linhas, separadamente, além da info de ecossistema e regiao
 estoque = filter (data, prod.metric == 2)
@@ -230,34 +232,42 @@ conjunto <- tibble (traits.fd = data$traits_FD,
   filter (driver != "Age")
 
 conj = conjunto %>%
-  group_by(functdiv,ecosystem) %>% 
+  filter(region %in% regiao_estudo) %>% 
+  group_by(functdiv,region) %>% 
   filter(ecosystem != "ecotones") %>% 
   mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
   mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
   count(driver) %>%
+  ungroup() %>% 
+  group_by(driver,region) %>% 
   filter(n>=3) %>% 
   mutate(frequencia = (n / sum(n))*100) %>% 
   mutate(frequencia = round(frequencia, digits = 0)) %>% 
   mutate(functdiv  = replace(functdiv , functdiv  == "negative", "Negative")) %>%
   mutate(functdiv  = replace(functdiv , functdiv  == "positive", "Positive")) %>%
   mutate(functdiv  = replace(functdiv , functdiv  == "ns", "No relationship")) %>%
-  rename(Ecosystem = ecosystem) %>% 
-  filter (driver != "Tree size")
+  filter (driver != "Tree size") %>% 
+  mutate(region  = replace(region , region  == "temperate", "Temperate")) %>%
+  mutate(region  = replace(region , region  == "tropical", "Tropical"))
+  
 
-#png("results/FD_conjunto.png", units="in", width=7, height=9, res=300)
-ggplot(conj, aes(x = reorder(driver, +frequencia), y= frequencia , fill= Ecosystem))+
+png("results/FD_temperate.tropical.png", units="in", width=10, height=7, res=300)
+ggplot(conj, aes(x = reorder(driver, +frequencia), y= frequencia , fill= functdiv))+
   geom_bar(stat= "identity", width = 0.4)+
   coord_flip()+
-  facet_wrap(facets = ~(functdiv), scales="free_y", ncol = 1) + 
+  facet_grid(facets = ~(region), scales="free_y") + 
   scale_x_discrete(limits=rev)+
-  scale_fill_manual(values = c("#009E73","#D55E00"))+
+  scale_fill_manual(values = c("#44AA99","#888888","#AA4499"),guide = guide_legend(
+    direction = "horizontal",
+    title.position = "top",title.hjust = 0.5))+ 
+  geom_text(aes(label=n), vjust=0.4, hjust=0, position=position_stack(vjust=0), colour="black", size=5) +
   labs(x = "", y = "Frequency (%)", title = "Trait effect on functional diversity") +  theme_minimal()  +
   theme(legend.position = "bottom",
         #legend.position = c(0.9,0.05),
         axis.text=element_text(size=15),
         strip.text = element_text(size = 15), 
-        plot.title = element_text(size = 20, face = "bold"))
-#dev.off()
+        plot.title = element_text(size = 20, face = "bold", hjust = 0.5))
+dev.off()
 
 conjunto
 trop = filter(conjunto,region =="tropical")
