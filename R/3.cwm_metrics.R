@@ -65,7 +65,8 @@ all <-  data %>%
 dados_contagem <- bind_rows(grass,fores) %>% 
   mutate(Variables = str_remove(Variables, "CWM_")) %>% 
   mutate(Variables = str_remove(Variables, "CWM ")) %>% 
-  mutate(Variables = replace(Variables, Variables  %in% lma , "SLA"))%>% # SLA como 1/LMA
+  mutate(Valores = replace(Valores, Valores =="negativa ", "Negative")) %>%
+    mutate(Variables = replace(Variables, Variables  %in% lma , "SLA"))%>% # SLA como 1/LMA
   mutate(Variables = replace(Variables, Variables  %in% height , "Height")) %>%
   mutate(Variables = replace(Variables, Variables  %in% seed , "Seed size")) %>%
   mutate(Variables = replace(Variables, Variables  %in% crown , "Crown size")) %>%
@@ -105,14 +106,27 @@ dados_contagem <- dados_contagem %>%
   add_row(Ecosystem = "Total", Relationship = "Total", summarise(., across(where(is.numeric), sum)))
 
 # aqui seleciona apenas os traits que foram citados 3 ou mais vezes
-traits.selected = dados_contagem %>% filter (Ecosystem == "Total") %>% 
+traits.selected <- dados_contagem %>% filter (Ecosystem == "Total") %>% 
   select_if(~any(. >= 3)) %>% 
   colnames()
 
 #voltar para a matriz anterior e filtra somente os traits selecionados
+forest = dados_contagem %>% 
+  filter(Ecosystem =="Forest") %>% 
+  add_row(Ecosystem = "Forest", Relationship = "Total", .after = 3, summarise(., across(where(is.numeric), sum))) %>% 
+  select(matches(traits.selected)) %>% 
+  slice(4)
+grassland = dados_contagem %>% 
+  filter(Ecosystem =="Grassland") %>% 
+  add_row(Ecosystem = "Grassland", Relationship = "Total", .after = 3, summarise(., across(where(is.numeric), sum))) %>% 
+  select(matches(traits.selected)) %>% 
+  slice(4)
+
 dados_contagem <- dados_contagem %>% 
   select(matches(traits.selected)) %>% 
-  filter(row_number() <=n()-1) %>% #remove a ultima linha
+  add_row(forest, .after = 3) %>% 
+  add_row(grassland, .after = 7)  %>% 
+    #filter(row_number() <=n()-1) %>% #remove a ultima linha
   arrange(Ecosystem,Relationship)
 
 #numero de papers que citam os cwm e a relacao encontrada
@@ -128,10 +142,55 @@ count_cwm <- dados_contagem %>%
 
 gt(count_cwm) %>%  
   tab_header(title = md("**Functional dominance as predictor of productivity**"),
-             subtitle = "Frequency and number of mentions of functional dominance effects on productivity") %>% 
+             subtitle = "Number of mentions of functional dominance effects on productivity") %>% 
   tab_style(style = cell_fill(color = "gray90"),
             locations = cells_column_labels(columns = everything())) %>% 
   cols_align(align = "center",columns = everything()) #%>% 
   #gtsave(filename = "results/CWM_effects_ecosys.rtf")
+
+num = count_cwm %>% 
+  select(Ecosystem, Relationship, Height, SLA, LDMC, LNC, LPC,`Root quantity`,WD) %>% 
+  slice(c(1:3,5:7)) %>% 
+  group_by(Ecosystem) %>% 
+  reshape2:: melt ()
+cwm_rel <- count_cwm %>% 
+  select(Ecosystem, Relationship, Height, SLA, LDMC, LNC, LPC,`Root quantity`,WD) %>% 
+  slice(c(1:3,5:7)) %>% 
+  group_by(Ecosystem) %>% 
+  mutate(Height = round((Height / sum(Height)*100), digits = 0)) %>% 
+  mutate(SLA = round((SLA / sum(SLA)*100), digits = 0)) %>% 
+  mutate(LDMC = round((LDMC / sum(LDMC)*100), digits = 0)) %>% 
+  mutate(LNC = round((LNC / sum(LNC)*100), digits = 0)) %>% 
+  mutate(LPC = round((LPC / sum(LPC)*100), digits = 0)) %>% 
+  mutate(`Root quantity` = round((`Root quantity` / sum(`Root quantity`)*100), digits = 0)) %>% 
+  mutate(WD = round((WD / sum(WD)*100), digits = 0)) %>% 
+  reshape2:: melt () %>% 
+  rename(Trait = variable,
+         frequencia = value) %>% 
+  replace(is.na(.), 0) %>% 
+  mutate(count = num$value) %>% 
+  mutate_at(c('count'), ~na_if(., 0))
+
+
+
+png("results/CWM_effect_ecosystem.png", units="in", width=11, height=9, res=300)
+cwm_rel%>% 
+  ggplot(aes(x=Ecosystem, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
+  labs(x = "", y = "Frequency of papers (%)", title = "Effect of functional dominance on productivity") + 
+  scale_fill_manual(values = c("#44AA99","#888888","#AA4499"),guide = guide_legend(
+    direction = "horizontal",
+    title.position = "top",title.hjust = 0.5))+ 
+  facet_wrap(facets = ~(Trait), scales="free_y", ncol = 4) + 
+  geom_text(aes(label=count), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) +
+  theme_minimal()  +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5,size = 15, face = "bold"),
+        axis.text=element_text(size=15),
+        axis.title.y =element_text(size=15), 
+        axis.title.x =element_text(size=15))
+dev.off()
+
+
+
 
 
