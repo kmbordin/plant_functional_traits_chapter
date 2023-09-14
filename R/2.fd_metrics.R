@@ -140,7 +140,7 @@ ggplot(fd2, aes(x = reorder(driver, -frequencia), y= frequencia , fill= Ecosyste
 #para o chi2 total, apenas remover o group_by(ecosystem)
 prod = data %>% filter (prod.metric == 1)
 estoque = data %>% filter (prod.metric == 2)
-fd3 <- prod %>%
+fd3 <- data %>%
   filter(ecosystem != "ecotones") %>% 
   #filter(regiao %in% regiao_estudo) %>% 
   mutate(regiao = replace(regiao, regiao == "subtropical" , "tropical")) %>%
