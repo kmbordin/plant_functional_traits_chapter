@@ -173,22 +173,23 @@ cwm_rel <- count_cwm %>%
 
 
 
-png("results/CWM_effect_ecosystem.png", units="in", width=11, height=9, res=300)
+#png("results/CWM_effect_ecosystem.png", units="in", width=11, height=9, res=300)
 cwm_rel%>% 
   ggplot(aes(x=Ecosystem, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
   labs(x = "", y = "Frequency of papers (%)", title = "Effect of functional dominance on productivity") + 
   scale_fill_manual(values = c("#44AA99","#888888","#AA4499"),guide = guide_legend(
     direction = "horizontal",
     title.position = "top",title.hjust = 0.5))+ 
-  facet_wrap(facets = ~(Trait), scales="free_y", ncol = 4) + 
+  facet_grid(facets = ~(Trait), scales="free") + 
   geom_text(aes(label=count), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) +
   theme_minimal()  +
   theme(legend.position = "bottom",
         plot.title = element_text(hjust = 0.5,size = 15, face = "bold"),
-        axis.text=element_text(size=15),
+        axis.text.x = element_text(size=12),
         axis.title.y =element_text(size=15), 
-        axis.title.x =element_text(size=15))
-dev.off()
+        axis.title.x =element_text(size=15), 
+        strip.text.x = element_text(size = 14))
+#dev.off()
 
 
 
