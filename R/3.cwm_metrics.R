@@ -7,7 +7,7 @@ cwm.site <- function (x) {
     mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
     mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
     filter(ecosystem != "ecotones") %>%
-    select(CWM_LA: CWM_carbon13,regiao) %>% 
+    select(CWM_LA: CWM_carbon13) %>% 
     rename_all(funs(stringr::str_replace_all( ., "CWM_", ""))) %>% #remove o CWM de todos os titulos
     pivot_longer(everything(), names_to = c("Variables"), values_to = "Valores") %>% #pivota as colunas para linhas
     mutate(Valores = replace(Valores, Valores == "ns", "No relationship")) %>%
@@ -38,37 +38,32 @@ fores <- data %>%
   cwm.site() %>% 
   mutate(ecosystem = "Forest")
 
-regiao_estudo = c("temperate", "tropical", "subtropical")
-dados <- data %>% filter(regiao %in% regiao_estudo)
+
 #filta as infos somente para campo
-grass_prod <- dados %>% 
+grass_prod <- data %>% 
   filter (ecosystem=="grassland") %>%
   filter (prod.metric=="1") %>%
-  mutate(regiao = replace(regiao, regiao == "subtropical", "tropical")) %>%
   cwm.site() %>% 
   mutate(ecosystem = "Grassland") %>% 
   mutate(metric = "produc")
-grass_stock <- dados %>% 
+grass_stock <- data %>% 
   filter (ecosystem=="grassland") %>%
   filter (prod.metric=="2") %>%
-  mutate(regiao = replace(regiao, regiao == "subtropical", "tropical")) %>%
   cwm.site() %>% 
   mutate(ecosystem = "Grassland") %>% 
   mutate(metric = "stock")
 
 #filtra as infos para floresta
-fores_prod <- dados %>% 
+fores_prod <- data %>% 
   filter (ecosystem=="forest") %>% 
   filter (prod.metric=="1") %>%
-  mutate(regiao = replace(regiao, regiao == "subtropical", "tropical")) %>%
   cwm.site() %>% 
   mutate(ecosystem = "Forest") %>% 
   mutate(metric = "produc")
 
-fores_stock <- dados %>% 
+fores_stock <- data %>% 
   filter (ecosystem=="forest") %>% 
   filter (prod.metric=="2") %>%
-  mutate(regiao = replace(regiao, regiao == "subtropical", "tropical")) %>%
   cwm.site() %>% 
   mutate(ecosystem = "Forest") %>% 
   mutate(metric = "stock")
@@ -98,8 +93,8 @@ all = data %>%
   cols_align(align = "center",columns = everything()) #%>% 
   #gtsave(filename = "results/CWM_effects_semecosys.rtf")
 
-dados_contagem <- #bind_rows(grass,fores) %>% 
-  bind_rows(grass_prod, grass_stock,fores_prod,fores_stock) %>%  #para regiaocomeçar aqui#
+dados_contagem <- bind_rows(grass,fores) %>% 
+  #bind_rows(grass_prod, grass_stock,fores_prod,fores_stock) %>%  #para estoque ou temporal aqui#
   mutate(Variables = str_remove(Variables, "CWM_")) %>% 
   mutate(Variables = str_remove(Variables, "CWM ")) %>% 
   mutate(Valores = replace(Valores, Valores =="negativa ", "Negative")) %>%
@@ -122,16 +117,30 @@ dados_contagem <- #bind_rows(grass,fores) %>%
   mutate(Variables = replace(Variables, Variables == "LCC_LA", "LCC:LA")) %>% 
   mutate(Variables = replace(Variables, Variables == "LCC_LNC", "LCC:LNC")) %>% 
   filter(Variables != "Age") %>% 
-  group_by(ecosystem, Variables, Valores, metric) %>% 
+  group_by(ecosystem, Variables, Valores) %>% #usar esse para o total
+  #group_by(ecosystem, Variables, Valores, metric) %>% #usar esse para estoque e temporal
   summarise(`Number of papers` = sum(`Number of papers`))
+
+
+#para plot
+traits = c("Height", "SLA", "LDMC", "LNC", "LPC",'Root quantity',"WD")
+estoque_temporal_cwm=dados_contagem %>% 
+  group_by(ecosystem,Variables,metric) %>% 
+  filter(Variables %in% traits) %>% 
+  mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0)) %>% 
+  rename(Ecosystem = ecosystem,
+         Relationship = Valores,
+         Trait = Variables)
+  
 
 # aqui gera a matriz de todos os traits usados para calcular o cwm, com uma linha final de total
 dados_contagem <- dados_contagem %>%
   #group_by(ecosystem) %>% 
-  #group_by(Variables) %>% 
+  group_by(Variables) %>% 
   #mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 1)) %>% 
   mutate(frequencia = `Number of papers`) %>% 
   #ungroup() %>% 
+  #select(Variables, Valores, ecosystem, frequencia) %>% 
   select(Variables, Valores, ecosystem, frequencia) %>% 
   rename(Relationship = Valores, 
          Ecosystem = ecosystem) %>% 
@@ -209,16 +218,19 @@ cwm_rel <- count_cwm %>%
   mutate_at(c('count'), ~na_if(., 0))
 
 
-
 #png("results/CWM_effect_ecosystem.png", units="in", width=11, height=9, res=300)
-cwm_rel%>% 
+#p1 = cwm_rel%>% 
+#p2 = estoque_temporal_cwm %>% filter(metric=="produc") %>%  #temporal
+#p3 = estoque_temporal_cwm %>% filter(metric=="stock") %>%  #stock
   ggplot(aes(x=Ecosystem, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
-  labs(x = "", y = "Frequency of papers (%)", title = "Effect of functional dominance on productivity") + 
+  labs(x = "", y = "Frequency of papers (%)", title = "Effect of functional dominance on productivity (stocks)") + 
   scale_fill_manual(values = c("#44AA99","#888888","#AA4499"),guide = guide_legend(
     direction = "horizontal",
     title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Trait), scales="free") + 
-  geom_text(aes(label=count), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) +
+  #geom_text(aes(label=count), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) +
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) +
+  
   theme_minimal()  +
   theme(legend.position = "bottom",
         plot.title = element_text(hjust = 0.5,size = 15, face = "bold"),
@@ -227,6 +239,11 @@ cwm_rel%>%
         axis.title.x =element_text(size=15), 
         strip.text.x = element_text(size = 14))
 #dev.off()
+plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
+png('results/CWM_estoque_temporal.png', units="in", width=25, height=18, res=300)
+plots
+dev.off()
+  
 
 reg = c("tropical", "temperate", "subtropical")
 n.data = data%>% 
@@ -341,7 +358,6 @@ estoque = bind_rows(trop,temp) %>%
         axis.title.x =element_text(size=15), 
         strip.text.x = element_text(size = 14))
 
-library(patchwork)
 # plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
 # png('results/CWM_prod_regioes.png', units="in", width=25, height=18, res=300)
 # plots
