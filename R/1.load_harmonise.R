@@ -1,4 +1,4 @@
-pacman::p_load(tidyverse,gt,gtExtras,janitor,doBy,here)
+pacman::p_load(tidyverse,gt,gtExtras,janitor,doBy,here, patchwork)
 # load data and harmonise table -----
 #data <- read.csv(here::here("processed_data", "analises-08.08.23.csv"))
 #data_raw <- read.csv(here::here("processed_data", "total.csv"))
