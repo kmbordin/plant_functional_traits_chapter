@@ -25,7 +25,6 @@ data$CWM_LMA <- ifelse(data$CWM_LMA == "negative", "MUDAR", data$CWM_LMA)
 data$CWM_LMA <- ifelse(data$CWM_LMA == "positive", "negative", data$CWM_LMA)
 data$CWM_LMA <- ifelse(data$CWM_LMA == "MUDAR", "positive", data$CWM_LMA)
 
-unique(data$Authors)
 
 #filta as infos somente para campo
 grass <- data %>% 
@@ -38,6 +37,41 @@ fores <- data %>%
   filter (ecosystem=="forest") %>% 
   cwm.site() %>% 
   mutate(ecosystem = "Forest")
+
+regiao_estudo = c("temperate", "tropical", "subtropical")
+dados <- data %>% filter(regiao %in% regiao_estudo)
+#filta as infos somente para campo
+grass_prod <- dados %>% 
+  filter (ecosystem=="grassland") %>%
+  filter (prod.metric=="1") %>%
+  mutate(regiao = replace(regiao, regiao == "subtropical", "tropical")) %>%
+  cwm.site() %>% 
+  mutate(ecosystem = "Grassland") %>% 
+  mutate(metric = "produc")
+grass_stock <- dados %>% 
+  filter (ecosystem=="grassland") %>%
+  filter (prod.metric=="2") %>%
+  mutate(regiao = replace(regiao, regiao == "subtropical", "tropical")) %>%
+  cwm.site() %>% 
+  mutate(ecosystem = "Grassland") %>% 
+  mutate(metric = "stock")
+
+#filtra as infos para floresta
+fores_prod <- dados %>% 
+  filter (ecosystem=="forest") %>% 
+  filter (prod.metric=="1") %>%
+  mutate(regiao = replace(regiao, regiao == "subtropical", "tropical")) %>%
+  cwm.site() %>% 
+  mutate(ecosystem = "Forest") %>% 
+  mutate(metric = "produc")
+
+fores_stock <- dados %>% 
+  filter (ecosystem=="forest") %>% 
+  filter (prod.metric=="2") %>%
+  mutate(regiao = replace(regiao, regiao == "subtropical", "tropical")) %>%
+  cwm.site() %>% 
+  mutate(ecosystem = "Forest") %>% 
+  mutate(metric = "stock")
 
 #efeito dos cwm para todos os dois ecossistemas (total)
 all = data %>% 
@@ -64,7 +98,8 @@ all = data %>%
   cols_align(align = "center",columns = everything()) #%>% 
   #gtsave(filename = "results/CWM_effects_semecosys.rtf")
 
-dados_contagem <- bind_rows(grass,fores) %>% 
+dados_contagem <- #bind_rows(grass,fores) %>% 
+  bind_rows(grass_prod, grass_stock,fores_prod,fores_stock) %>%  #para regiaocomeçar aqui#
   mutate(Variables = str_remove(Variables, "CWM_")) %>% 
   mutate(Variables = str_remove(Variables, "CWM ")) %>% 
   mutate(Valores = replace(Valores, Valores =="negativa ", "Negative")) %>%
@@ -87,13 +122,13 @@ dados_contagem <- bind_rows(grass,fores) %>%
   mutate(Variables = replace(Variables, Variables == "LCC_LA", "LCC:LA")) %>% 
   mutate(Variables = replace(Variables, Variables == "LCC_LNC", "LCC:LNC")) %>% 
   filter(Variables != "Age") %>% 
-  group_by(ecosystem, Variables, Valores) %>% 
+  group_by(ecosystem, Variables, Valores, metric) %>% 
   summarise(`Number of papers` = sum(`Number of papers`))
 
 # aqui gera a matriz de todos os traits usados para calcular o cwm, com uma linha final de total
 dados_contagem <- dados_contagem %>%
   #group_by(ecosystem) %>% 
-  group_by(Variables) %>% 
+  #group_by(Variables) %>% 
   #mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 1)) %>% 
   mutate(frequencia = `Number of papers`) %>% 
   #ungroup() %>% 
@@ -102,7 +137,7 @@ dados_contagem <- dados_contagem %>%
          Ecosystem = ecosystem) %>% 
   pivot_wider(names_from = Variables, values_from = frequencia) %>% 
   select(order(colnames(.))) %>% 
-  relocate(Ecosystem, .before = CaC) %>% 
+  relocate(Ecosystem) %>% 
   relocate(Relationship, .after = Ecosystem) %>% 
   replace(is.na(.), 0) %>% 
   add_row(Ecosystem = "Total", Relationship = "Total", summarise(., across(where(is.numeric), sum)))
