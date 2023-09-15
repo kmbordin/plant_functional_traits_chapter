@@ -7,7 +7,7 @@ cwm.site <- function (x) {
     mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
     mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
     filter(ecosystem != "ecotones") %>%
-    select(CWM_LA: CWM_carbon13) %>% 
+    select(CWM_LA: CWM_carbon13,regiao) %>% 
     rename_all(funs(stringr::str_replace_all( ., "CWM_", ""))) %>% #remove o CWM de todos os titulos
     pivot_longer(everything(), names_to = c("Variables"), values_to = "Valores") %>% #pivota as colunas para linhas
     mutate(Valores = replace(Valores, Valores == "ns", "No relationship")) %>%
@@ -25,6 +25,8 @@ data$CWM_LMA <- ifelse(data$CWM_LMA == "negative", "MUDAR", data$CWM_LMA)
 data$CWM_LMA <- ifelse(data$CWM_LMA == "positive", "negative", data$CWM_LMA)
 data$CWM_LMA <- ifelse(data$CWM_LMA == "MUDAR", "positive", data$CWM_LMA)
 
+unique(data$Authors)
+
 #filta as infos somente para campo
 grass <- data %>% 
   filter (ecosystem=="grassland") %>%
@@ -38,7 +40,7 @@ fores <- data %>%
   mutate(ecosystem = "Forest")
 
 #efeito dos cwm para todos os dois ecossistemas (total)
-all <-  data %>% 
+all = data %>% 
   cwm.site() %>% 
   select(-Valores) %>% 
   mutate(Variables = replace(Variables, Variables == "LMA" , "SLA"))%>%
@@ -66,7 +68,7 @@ dados_contagem <- bind_rows(grass,fores) %>%
   mutate(Variables = str_remove(Variables, "CWM_")) %>% 
   mutate(Variables = str_remove(Variables, "CWM ")) %>% 
   mutate(Valores = replace(Valores, Valores =="negativa ", "Negative")) %>%
-    mutate(Variables = replace(Variables, Variables  %in% lma , "SLA"))%>% # SLA como 1/LMA
+  mutate(Variables = replace(Variables, Variables  %in% lma , "SLA"))%>% # SLA como 1/LMA
   mutate(Variables = replace(Variables, Variables  %in% height , "Height")) %>%
   mutate(Variables = replace(Variables, Variables  %in% seed , "Seed size")) %>%
   mutate(Variables = replace(Variables, Variables  %in% crown , "Crown size")) %>%
@@ -126,7 +128,7 @@ dados_contagem <- dados_contagem %>%
   select(matches(traits.selected)) %>% 
   add_row(forest, .after = 3) %>% 
   add_row(grassland, .after = 7)  %>% 
-    #filter(row_number() <=n()-1) %>% #remove a ultima linha
+  #filter(row_number() <=n()-1) %>% #remove a ultima linha
   arrange(Ecosystem,Relationship)
 
 #numero de papers que citam os cwm e a relacao encontrada
@@ -191,7 +193,121 @@ cwm_rel%>%
         strip.text.x = element_text(size = 14))
 #dev.off()
 
+reg = c("tropical", "temperate", "subtropical")
+n.data = data%>% 
+  mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
+  mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
+  filter(ecosystem != "ecotones") %>%
+  select(CWM_LA: CWM_carbon13,regiao,prod.metric) %>% 
+  filter(regiao %in% reg) %>% 
+  mutate(regiao = replace(regiao, regiao == "subtropical", "tropical")) %>% 
+  filter (prod.metric != "1,2")
 
+trop = filter (n.data, regiao =="tropical")%>%
+  #filter (prod.metric == 1) %>% #incluir esses filtros para os estoques ou npp
+  #filter (prod.metric == 2) %>% #incluir esses filtros para os estoques ou npp
+  rename_all(funs(stringr::str_replace_all( ., "CWM_", ""))) %>% #remove o CWM de todos os titulos
+  pivot_longer(everything(), names_to = c("Variables"), values_to = "Valores") %>% #pivota as colunas para linhas
+  mutate(Valores = replace(Valores, Valores == "ns", "No relationship")) %>%
+  mutate(Valores = replace(Valores, Valores == "positive", "Positive")) %>%
+  mutate(Valores = replace(Valores, Valores == "negative", "Negative")) %>%
+  filter(Valores != "positive(temperate),negative(subtropical)") %>% 
+  mutate(Variables = replace(Variables, Variables  %in% lma , "SLA"))%>% # SLA como 1/LMA
+  mutate(Variables = replace(Variables, Variables  %in% height , "Height")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% seed , "Seed size")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% crown , "Crown size")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% tree.size , "Tree size")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% lcc , "LCC")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% root , "Root quantity")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% lt , "LT")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% vessel , "Vessel quantity")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% pigment , "Pigments")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% n.p , "LNC:LPC")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% lpc , "LPC")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% tolerance , "Tolerance")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% growth , "Growth rate")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% na , "")) %>%
+  mutate(Variables = replace(Variables, Variables == "age", "Age")) %>% 
+  mutate(Variables = replace(Variables, Variables == "LCC_LA", "LCC:LA")) %>% 
+  mutate(Variables = replace(Variables, Variables == "LCC_LNC", "LCC:LNC")) %>% 
+  group_by(Variables, Valores) %>%
+  summarize(`Number of papers` = n()) %>% 
+  drop_na(Valores) %>% 
+  filter (Variables != "prod.metric") %>% 
+  filter (Variables != "regiao") %>% 
+  group_by(Variables) %>% 
+  mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0))  %>% 
+  mutate(Region = "Tropical")
+  
+  
+temp = filter (n.data, regiao == "temperate")%>%
+  #filter (prod.metric ==1) %>% npp
+  #filter (prod.metric ==2) %>% #estoques
+  pivot_longer(everything(), names_to = c("Variables"), values_to = "Valores") %>% #pivota as colunas para linhas
+  mutate(Valores = replace(Valores, Valores == "ns", "No relationship")) %>%
+  mutate(Valores = replace(Valores, Valores == "positive", "Positive")) %>%
+  mutate(Valores = replace(Valores, Valores == "negative", "Negative")) %>%
+  filter(Valores != "positive(temperate),negative(subtropical)") %>% 
+  mutate(Variables = replace(Variables, Variables  %in% lma , "SLA"))%>% # SLA como 1/LMA
+  mutate(Variables = replace(Variables, Variables  %in% height , "Height")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% seed , "Seed size")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% crown , "Crown size")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% tree.size , "Tree size")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% lcc , "LCC")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% root , "Root quantity")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% lt , "LT")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% vessel , "Vessel quantity")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% pigment , "Pigments")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% n.p , "LNC:LPC")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% lpc , "LPC")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% tolerance , "Tolerance")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% growth , "Growth rate")) %>%
+  mutate(Variables = replace(Variables, Variables  %in% na , "")) %>%
+  mutate(Variables = replace(Variables, Variables == "age", "Age")) %>% 
+  mutate(Variables = replace(Variables, Variables == "LCC_LA", "LCC:LA")) %>% 
+  mutate(Variables = replace(Variables, Variables == "LCC_LNC", "LCC:LNC")) %>% 
+  filter (Variables != "prod.metric") %>% 
+  filter (Variables != "regiao")  %>% 
+  group_by(Variables, Valores) %>%
+  summarize(`Number of papers` = n()) %>% 
+  drop_na(Valores) %>% 
+  group_by(Variables) %>% 
+  mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0))  %>% 
+  mutate(Region = "Temperate")  
+  
+traits = c("Height", "SLA", "LDMC", "LNC", "LPC", "Root quantity", "WD")
 
+both = bind_rows(trop,temp) %>% 
+  rename(Relationship = Valores) %>% 
+  filter (Variables %in% traits)
 
+prod  =  bind_rows(trop,temp) %>% 
+  rename(Relationship = Valores) %>% 
+  filter (Variables %in% traits)
+estoque = bind_rows(trop,temp) %>% 
+  rename(Relationship = Valores) %>% 
+  filter (Variables %in% traits)
 
+#p1 = both%>% 
+#p2 = prod %>% 
+#p3 = estoque %>% 
+  ggplot(aes(x=Region, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
+  labs(x = "", y = "Frequency of papers (%)", title = "Effect of functional dominance on productivity \nacross different regions (stocks)") + 
+  scale_fill_manual(values = c("#44AA99","#888888","#AA4499"),guide = guide_legend(
+    direction = "horizontal",
+    title.position = "top",title.hjust = 0.5))+ 
+  facet_grid(facets = ~(Variables), scales="free") + 
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) +
+  theme_minimal()  +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5,size = 15, face = "bold"),
+        axis.text.x = element_text(size=12),
+        axis.title.y =element_text(size=15), 
+        axis.title.x =element_text(size=15), 
+        strip.text.x = element_text(size = 14))
+
+library(patchwork)
+# plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
+# png('results/CWM_prod_regioes.png', units="in", width=25, height=18, res=300)
+# plots
+# dev.off()
