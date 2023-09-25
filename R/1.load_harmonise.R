@@ -8,14 +8,14 @@ data_raw <- read.csv(here::here("processed_data", "analises-12.09.23.csv"))
 
 levels(as.factor(data_raw$tipo_ecossistema.eg.campo.floresta.savana.etc.))
 
-ecosys = c("forest", "grassland","steppe","medow-steppes", "dune grassland","forest-steppe ecotones","agricultural/semi-natural grasslands","forest;shrublands", "forest;woodlands","forest;tundra", "forest-steppe ecotones","forest, shrubland, grassland, savanna,","forests, shrubland and sparse grasslands")
+ecosys = c("forest", "grassland","steppe","medow-steppes", "dune grassland","forest-steppe ecotones","agricultural/semi-natural grasslands","forest;shrublands", "forest;woodlands","forest;tundra", "forest-steppe ecotones","forest, shrubland, grassland, savanna,","forests, shrubland and sparse grasslands", "savana")
 posi = c("positiva", "positive", "positivo")
 neg = c("negativa", "negative", "negativo")
 outros.neg = c("negative(SLA andLDMC)","negative(SLA,height_rep,LCC)")
 outros.posi = c("negativo (trait richness)/positivo (trait divergence)", 
                 "positive,ns-for-leaf-traits", "positive,ns-for-seed-mass")
 
-grassland = c("agricultural/semi-natural grasslands","dune grassland", "medow-steppes", "steppe")
+grassland = c("agricultural/semi-natural grasslands","dune grassland", "medow-steppes", "steppe", "savana")
 forest = c("forest;shrublands", "forest;woodlands","forest;tundra")
 ecoton = c("forest-steppe ecotones","forest, shrubland, grassland, savanna,","forests, shrubland and sparse grasslands")
 
