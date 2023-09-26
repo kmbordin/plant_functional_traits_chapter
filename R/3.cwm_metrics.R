@@ -25,8 +25,7 @@ data$CWM_LMA <- ifelse(data$CWM_LMA == "negative", "MUDAR", data$CWM_LMA)
 data$CWM_LMA <- ifelse(data$CWM_LMA == "positive", "negative", data$CWM_LMA)
 data$CWM_LMA <- ifelse(data$CWM_LMA == "MUDAR", "positive", data$CWM_LMA)
 
-
-#filta as infos somente para campo
+#filtra as infos somente para campo
 grass <- data %>% 
   filter (ecosystem=="grassland") %>%
   cwm.site() %>% 
@@ -37,7 +36,6 @@ fores <- data %>%
   filter (ecosystem=="forest") %>% 
   cwm.site() %>% 
   mutate(ecosystem = "Forest")
-
 
 #filta as infos somente para campo
 grass_prod <- data %>% 
@@ -60,7 +58,6 @@ fores_prod <- data %>%
   cwm.site() %>% 
   mutate(ecosystem = "Forest") %>% 
   mutate(metric = "produc")
-
 fores_stock <- data %>% 
   filter (ecosystem=="forest") %>% 
   filter (prod.metric=="2") %>%
@@ -94,7 +91,7 @@ all = data %>%
   #gtsave(filename = "results/CWM_effects_semecosys.rtf")
 
 dados_contagem <- bind_rows(grass,fores) %>% 
-  #bind_rows(grass_prod, grass_stock,fores_prod,fores_stock) %>%  #para estoque ou temporal aqui#
+#dados_contagem <- bind_rows(grass_prod, grass_stock,fores_prod,fores_stock) %>%  #para estoque ou temporal aqui#
   mutate(Variables = str_remove(Variables, "CWM_")) %>% 
   mutate(Variables = str_remove(Variables, "CWM ")) %>% 
   mutate(Valores = replace(Valores, Valores =="negativa ", "Negative")) %>%
@@ -121,10 +118,10 @@ dados_contagem <- bind_rows(grass,fores) %>%
   #group_by(ecosystem, Variables, Valores, metric) %>% #usar esse para estoque e temporal
   summarise(`Number of papers` = sum(`Number of papers`))
 
-
 #para plot
 traits = c("Height", "SLA", "LDMC", "LNC", "LPC",'Root quantity',"WD")
-estoque_temporal_cwm=dados_contagem %>% 
+fores_prod
+estoque_temporal_cwm <- dados_contagem %>% 
   group_by(ecosystem,Variables,metric) %>% 
   filter(Variables %in% traits) %>% 
   mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0)) %>% 
@@ -132,7 +129,6 @@ estoque_temporal_cwm=dados_contagem %>%
          Relationship = Valores,
          Trait = Variables)
   
-
 # aqui gera a matriz de todos os traits usados para calcular o cwm, com uma linha final de total
 dados_contagem <- dados_contagem %>%
   #group_by(ecosystem) %>% 
@@ -140,7 +136,6 @@ dados_contagem <- dados_contagem %>%
   #mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 1)) %>% 
   mutate(frequencia = `Number of papers`) %>% 
   #ungroup() %>% 
-  #select(Variables, Valores, ecosystem, frequencia) %>% 
   select(Variables, Valores, ecosystem, frequencia) %>% 
   rename(Relationship = Valores, 
          Ecosystem = ecosystem) %>% 
@@ -215,22 +210,25 @@ cwm_rel <- count_cwm %>%
          frequencia = value) %>% 
   replace(is.na(.), 0) %>% 
   mutate(count = num$value) %>% 
-  mutate_at(c('count'), ~na_if(., 0))
+  #mutate_at(. ~na_if(.0)) %>% 
+  mutate(frequencia = replace(frequencia, frequencia == "71", "72")) %>% 
+  mutate(frequencia = replace(frequencia, frequencia == "17", "16")) %>% 
+  mutate(frequencia = replace(frequencia, frequencia == "38", "39")) %>% 
+  mutate(frequencia = as.numeric(frequencia))
 
 
 #png("results/CWM_effect_ecosystem.png", units="in", width=11, height=9, res=300)
-#p1 = cwm_rel%>% 
-#p2 = estoque_temporal_cwm %>% filter(metric=="produc") %>%  #temporal
-#p3 = estoque_temporal_cwm %>% filter(metric=="stock") %>%  #stock
+p1 = cwm_rel%>% rename(`Number of papers`=count) %>% 
+#p2 = estoque_temporal_cwm %>% filter(metric=="produc") %>% mutate(frequencia = replace(frequencia, frequencia == "29", "28.5")) %>% mutate(frequencia=replace(frequencia, frequencia == "18", "19")) %>% mutate(frequencia=as.numeric(frequencia)) %>% #temporal
+#p3 = estoque_temporal_cwm %>% filter(metric=="stock") %>% mutate(frequencia = replace(frequencia, frequencia == "29", "28.5")) %>% mutate(frequencia = replace(frequencia, frequencia == "17", "16.5")) %>% mutate(frequencia = replace(frequencia, frequencia == "22", "23")) %>% mutate(frequencia=as.numeric(frequencia)) %>% #stock
   ggplot(aes(x=Ecosystem, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
-  labs(x = "", y = "Frequency of papers (%)", title = "Effect of functional dominance on productivity (stocks)") + 
-  scale_fill_manual(values = c("#44AA99","#888888","#AA4499"),guide = guide_legend(
+  labs(x = "", y = "Frequency of papers (%)", title = "Effect of functional dominance on productivity") + 
+  scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal",
     title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Trait), scales="free") + 
   #geom_text(aes(label=count), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) +
   geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) +
-  
   theme_minimal()  +
   theme(legend.position = "bottom",
         plot.title = element_text(hjust = 0.5,size = 15, face = "bold"),
@@ -240,13 +238,12 @@ cwm_rel <- count_cwm %>%
         strip.text.x = element_text(size = 14))
 #dev.off()
 plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
-png('results/CWM_estoque_temporal.png', units="in", width=25, height=18, res=300)
-plots
-dev.off()
-  
+# png('results/CWM_estoque_temporal.png', units="in", width=25, height=18, res=300)
+# plots
+# dev.off()
 
 reg = c("tropical", "temperate", "subtropical")
-n.data = data%>% 
+n.data = data %>% 
   mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
   mutate(ecosystem = replace(ecosystem, ecosystem == "grassland", "Grassland")) %>%
   filter(ecosystem != "ecotones") %>%
@@ -255,9 +252,9 @@ n.data = data%>%
   mutate(regiao = replace(regiao, regiao == "subtropical", "tropical")) %>% 
   filter (prod.metric != "1,2")
 
-trop = filter (n.data, regiao =="tropical")%>%
-  #filter (prod.metric == 1) %>% #incluir esses filtros para os estoques ou npp
-  #filter (prod.metric == 2) %>% #incluir esses filtros para os estoques ou npp
+filtros <- function(data, reg, metrica) {
+  filter (n.data, regiao == reg)%>%
+  filter (prod.metric == metrica) %>% #incluir esses filtros para os estoques ou npp
   rename_all(funs(stringr::str_replace_all( ., "CWM_", ""))) %>% #remove o CWM de todos os titulos
   pivot_longer(everything(), names_to = c("Variables"), values_to = "Valores") %>% #pivota as colunas para linhas
   mutate(Valores = replace(Valores, Valores == "ns", "No relationship")) %>%
@@ -288,13 +285,18 @@ trop = filter (n.data, regiao =="tropical")%>%
   filter (Variables != "prod.metric") %>% 
   filter (Variables != "regiao") %>% 
   group_by(Variables) %>% 
-  mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0))  %>% 
-  mutate(Region = "Tropical")
-  
-  
-temp = filter (n.data, regiao == "temperate")%>%
-  #filter (prod.metric ==1) %>% npp
-  #filter (prod.metric ==2) %>% #estoques
+  mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0))
+  #mutate(Region = "Tropical")
+}
+trop_prod = filtros(n.data, reg = "tropical", 1) %>% mutate(Region = "Tropical")
+trop_estoque = filtros(n.data, reg = "tropical", 2) %>% mutate(Region = "Tropical")
+temp_prod = filtros(n.data, reg = "temperate", 1) %>% mutate(Region = "Temperate")  
+temp_estoque = filtros(n.data, reg = "temperate", 2) %>% mutate(Region = "Temperate")  
+# temp <-n.data %>% 
+#   filter (regiao == "temperate")%>%
+# trop <-n.data %>% 
+#   filter (regiao == "tropical")%>%
+  rename_all(funs(stringr::str_replace_all( ., "CWM_", ""))) %>% #remove o CWM de todos os titulos
   pivot_longer(everything(), names_to = c("Variables"), values_to = "Valores") %>% #pivota as colunas para linhas
   mutate(Valores = replace(Valores, Valores == "ns", "No relationship")) %>%
   mutate(Valores = replace(Valores, Valores == "positive", "Positive")) %>%
@@ -318,33 +320,45 @@ temp = filter (n.data, regiao == "temperate")%>%
   mutate(Variables = replace(Variables, Variables == "age", "Age")) %>% 
   mutate(Variables = replace(Variables, Variables == "LCC_LA", "LCC:LA")) %>% 
   mutate(Variables = replace(Variables, Variables == "LCC_LNC", "LCC:LNC")) %>% 
-  filter (Variables != "prod.metric") %>% 
-  filter (Variables != "regiao")  %>% 
   group_by(Variables, Valores) %>%
   summarize(`Number of papers` = n()) %>% 
   drop_na(Valores) %>% 
+  filter (Variables != "prod.metric") %>% 
+  filter (Variables != "regiao") %>% 
   group_by(Variables) %>% 
-  mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0))  %>% 
-  mutate(Region = "Temperate")  
+  mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0)) %>% 
+  #mutate(Region = "Temperate")
+  #mutate(Region = "Tropical")
+
   
 traits = c("Height", "SLA", "LDMC", "LNC", "LPC", "Root quantity", "WD")
 
 both = bind_rows(trop,temp) %>% 
   rename(Relationship = Valores) %>% 
-  filter (Variables %in% traits)
+  filter (Variables %in% traits) %>% 
+  mutate(frequencia = replace(frequencia, frequencia == "44", "45")) %>% 
+  mutate(frequencia = replace(frequencia, frequencia == "12", "13")) %>% 
+  mutate(frequencia = replace(frequencia, frequencia == "27", "27.5")) %>% 
+  mutate(frequencia = replace(frequencia, frequencia == "35", "35.5")) %>% 
+  mutate(frequencia=as.numeric(frequencia))
 
-prod  =  bind_rows(trop,temp) %>% 
+prod  =  bind_rows(trop_prod,temp_prod) %>% 
+  rename(Relationship = Valores) %>%
+  filter (Variables %in% traits)  %>% 
+  mutate(frequencia = replace(frequencia, frequencia == "33", "33.3"))%>% 
+  mutate(frequencia=as.numeric(frequencia))
+  
+estoque = bind_rows(trop_estoque,temp_estoque) %>% 
   rename(Relationship = Valores) %>% 
-  filter (Variables %in% traits)
-estoque = bind_rows(trop,temp) %>% 
-  rename(Relationship = Valores) %>% 
-  filter (Variables %in% traits)
+  filter (Variables %in% traits) %>% 
+  mutate(frequencia = replace(frequencia, frequencia == "67", "66"))%>% 
+  mutate(frequencia=as.numeric(frequencia))
 
-#p1 = both%>% 
+p1 = both%>% 
 #p2 = prod %>% 
 #p3 = estoque %>% 
   ggplot(aes(x=Region, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
-  labs(x = "", y = "Frequency of papers (%)", title = "Effect of functional dominance on productivity \nacross different regions (stocks)") + 
+  labs(x = "", y = "Frequency of papers (%)", title = "Effect of functional dominance on productivity \nacross different regions") + 
   scale_fill_manual(values = c("#44AA99","#888888","#AA4499"),guide = guide_legend(
     direction = "horizontal",
     title.position = "top",title.hjust = 0.5))+ 
@@ -358,7 +372,7 @@ estoque = bind_rows(trop,temp) %>%
         axis.title.x =element_text(size=15), 
         strip.text.x = element_text(size = 14))
 
-# plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
-# png('results/CWM_prod_regioes.png', units="in", width=25, height=18, res=300)
+plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
+# png('results/CWM_prod_regioes.png', units="in", width=25, height=13, res=300)
 # plots
 # dev.off()
