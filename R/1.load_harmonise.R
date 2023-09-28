@@ -83,7 +83,7 @@ n.c = c("razaoC:Nfolha","leafC:Nratio", "LC:N", "leaf_carbon_nitrogen_ratio", "r
 
 wd = c("stemspecificdensity.", "stemdrymattercontent", "Wood_specific_gravity(WSG)", "wooddensity", "wd")
 
-height = c("High_understory_layer_cover(h.cover)","plantheight", "Maximum_plant_height", "maximumheight", "plant_height_reproductive", "maximum_height", "H", "height", "canopyheight", "CANOPY_HEIGHT","max_height_growth_rate","plantheight(H)", "canopy_height")
+height = c("High_understory_layer_cover(h.cover)","plantheight", "Maximum_plant_height", "maximumheight", "plant_height_reproductive", "maximum_height", "H", "height", "canopyheight", "CANOPY_HEIGHT","max_height_growth_rate","plantheight(H)", "canopy_height", "Height")
 
 dec = c("deciduousness", "deciduousness(Dec)", "leaf_habit", "leafseasonality", "leaf_longevity(LL", "LIFE_SPAN")
 
