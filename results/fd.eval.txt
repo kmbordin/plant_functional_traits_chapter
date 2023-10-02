@@ -3,7 +3,7 @@ Crown size	2	0	0	2	0	2
 Deciduousness	3	1	2	2	4	0
 Growth form	1	3	3	1	3	1
 Growth rate	2	0	1	1	1	1
-Height	2	1	1	2	1	1
+Height	12	9	12	9	7	12
 LA	10	6	10	6	8	6
 LCC	3	6	8	1	4	3
 LCC:LNC	2	5	5	2	4	1
