@@ -357,5 +357,17 @@ cwm = total %>%  select(-frequencia) %>%  pivot_wider(names_from = Variables, va
 cwm %>% 
   gt() %>% 
   tab_header(title = md("**Functional dominance evaluation**"),
-             subtitle = "Relationship between functional dominance and productivity across different ecosystems and regions")  %>% 
-  gtsave(filename = "results/cwm.rtf")
+             subtitle = "Relationship between functional dominance and productivity across different ecosystems and regions")  #%>% 
+  #gtsave(filename = "results/cwm.rtf")
+
+cwm = total %>%  pivot_wider(names_from = Variables, values_from = `Number of papers`) %>% 
+  relocate(Environment, .before = Relationship) %>% 
+  replace(is.na(.),0) %>% 
+  relocate(`Root quantity`, .after = WD)
+
+cwm %>% 
+  gt() %>% 
+  tab_header(title = md("**Functional dominance evaluation**"),
+             subtitle = "Relationship between functional dominance and productivity across different ecosystems and regions")  #%>% 
+  #gtsave(filename = "results/cwm.rtf")
+
