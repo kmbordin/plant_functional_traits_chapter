@@ -342,3 +342,20 @@ plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths =
 # png('results/CWM_estoque_temporal_regiao.png', units="in", width=26, height=13, res=300)
 # plots
 # dev.off()
+
+ecosystem <- ecosystem %>% 
+  rename(Environment = ecosystem)
+regiao <- regiao %>% 
+  rename(Environment = regiao)
+total = bind_rows(ecosystem,regiao)
+
+cwm = total %>%  select(-frequencia) %>%  pivot_wider(names_from = Variables, values_from = `Number of papers`) %>% 
+  relocate(Environment, .before = Relationship) %>% 
+  replace(is.na(.),0) %>% 
+  relocate(`Root quantity`, .after = WD)
+
+cwm %>% 
+  gt() %>% 
+  tab_header(title = md("**Functional dominance evaluation**"),
+             subtitle = "Relationship between functional dominance and productivity across different ecosystems and regions")  %>% 
+  gtsave(filename = "results/cwm.rtf")

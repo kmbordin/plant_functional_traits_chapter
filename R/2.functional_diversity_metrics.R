@@ -106,7 +106,8 @@ fd.eval <- bind_rows(ecosys_eval,region_eval, metric_eval) %>%
   rename(Rate = `1`,
          Stock = `2`) %>% 
   replace(is.na(.),0) %>% 
-  filter(`Trait type` %in% cat$`Traits used in this study`)
+  filter(`Trait type` %in% cat$`Traits used in this study`) %>% 
+  arrange()
 #write.table(fd.eval, "results/fd.eval.txt")
 
 n.papers.fd = data %>% 
