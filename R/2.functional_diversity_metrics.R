@@ -16,6 +16,12 @@ prod_type = c("1","2")
 regiao_estudo = c("temperate", "tropical", "subtropical")
 ecosys_type= c("forest", "grassland")
 
+region = c("Tropical","subtropical","Temperate")
+ecosys = c("Forest", "Grassland")
+metric = c("1","2")
+data <- data %>% filter(ecosystem %in% ecosys_type)
+data <- data %>% filter(regiao %in% regiao_estudo)
+data <- data %>% filter(prod.metric %in% prod_type)
 fd <- tibble (traits.fd = data$traits_FD, 
               ecosystem = data$ecosystem,
               region = data$regiao, 
@@ -114,9 +120,6 @@ n.p.trop = n.papers.fd %>%
 n.p.temp = n.papers.fd %>%
   filter(regiao=="temperate") 
 
-region = c("Tropical","subtropical","Temperate")
-ecosys = c("Forest", "Grassland")
-metric = c("1","2")
 
 fd_new <- data %>%  
   mutate(regiao = replace(regiao, regiao == "subtropical" , "tropical")) %>%
@@ -136,7 +139,6 @@ eval <- fd_new %>%
   filter(prod.metric %in% metric) %>% 
   rename(Region = regiao,
          Ecosystem = ecosystem)
-
 
 region_all <- eval %>% 
   group_by(Region, FD) %>% 
@@ -160,11 +162,10 @@ region_stock <- eval %>%
   rename(Relationship = FD) 
 
 chisq.test(region_all$n) #X-squared = 7, df = 5, p-value = 0.2206
-g = region_all %>% filter(regiao == "Temperate") 
+g = region_all %>% filter(Region == "Temperate") 
 g1 = chisq.test(g$n) #X-squared = 4.3333, df = 2, p-value = 0.114
-f = region_all %>% filter(regiao == "Tropical")
+f = region_all %>% filter(Region == "Tropical")
 f1 = chisq.test(f$n) #X-squared = 1.8571, df = 2, p-value = 0.395
-
 
 ecosys_all <- eval %>% 
   group_by(Ecosystem, FD) %>% 
@@ -187,11 +188,11 @@ ecosys_stock <- eval %>%
   mutate(`Frequency (%)` = round((n / sum(n))*100, digits = 0)) %>% 
   rename(Relationship = FD) 
 
-chisq.test(ecosys_all$n) #X-squared = 6.0541, df = 2, p-value = 0.04846
-g = ecosys_all %>% filter(ecosystem == "Grassland") 
-g1 = chisq.test(g$n) #X-squared = 4.3333, df = 2, p-value = 0.1146
-f = ecosys_all %>% filter(ecosystem == "Forest")
-f1 = chisq.test(f$n) #X-squared = 5.8462, df = 2, p-value = 0.05377
+chisq.test(ecosys_all$n) #X-squared = 7.375, df = 5, p-value = 0.1942
+g = ecosys_all %>% filter(Ecosystem == "Grassland") 
+g1 = chisq.test(g$n) #X-squared = 5.7647, df = 2, p-value = 0.056
+f = ecosys_all %>% filter(Ecosystem == "Forest")
+f1 = chisq.test(f$n) #X-squared = 1.2, df = 2, p-value = 0.5488
 
 
 themes <- theme_minimal()  + 
@@ -235,13 +236,13 @@ p1 = ecosys_all %>%
     direction = "horizontal", title.position = "top",title.hjust = 0.5))+
   labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different ecosystems")
 p2 = ecosys_prod %>% 
-  ggplot(aes(x = Region, y= `Frequency (%)` , fill= Relationship))+
+  ggplot(aes(x = Ecosystem, y= `Frequency (%)` , fill= Relationship))+
   geom_bar(stat= "identity") +  geom_text(aes(label=n), vjust=-0.2, hjust=0.5, position=position_stack(vjust=0), colour="black", size=5)+themes+scale_x_discrete(limits=rev)+
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal", title.position = "top",title.hjust = 0.5))+
   labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different ecosystems (rate only)") 
 p3 = ecosys_stock %>% 
-  ggplot(aes(x = Region, y= `Frequency (%)` , fill= Relationship))+
+  ggplot(aes(x = Ecosystem, y= `Frequency (%)` , fill= Relationship))+
   geom_bar(stat= "identity") +  geom_text(aes(label=n), vjust=-0.2, hjust=0.5, position=position_stack(vjust=0), colour="black", size=5)+themes+scale_x_discrete(limits=rev)+
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal", title.position = "top",title.hjust = 0.5))+
