@@ -1,0 +1,25 @@
+"","Variable","Environment","X.squared","df","p.value"
+"X-squared...1","Height","Grassland",4.76923076923077,2,0.0921244052297693
+"X-squared...2","SLA","Grassland",0.4,2,0.818730753077982
+"X-squared...3","LA","Grassland",1,1,0.317310507862914
+"X-squared...4","LDMC","Grassland",0.666666666666667,2,0.716531310573789
+"X-squared...5","LNC","Grassland",0.666666666666667,2,0.716531310573789
+"X-squared...6","Root quantity","Grassland",0.5,1,0.479500122186953
+"X-squared...7","Height","Forest",0.142857142857143,1,0.705456986111273
+"X-squared...8","SLA","Forest",0.153846153846154,2,0.925961078642316
+"X-squared...9","LA","Forest",0.2,1,0.654720846018577
+"X-squared...10","LDMC","Forest",2.66666666666667,1,0.102470434859749
+"X-squared...11","LNC","Forest",2.90909090909091,2,0.233506479090913
+"X-squared...12","WD","Forest",0,1,1
+"X-squared...13","Height","Temperate",4.76923076923077,2,0.0921244052297693
+"X-squared...14","SLA","Temperate",0.117647058823529,2,0.942873143854875
+"X-squared...15","LA","Temperate",3,2,0.22313016014843
+"X-squared...16","LDMC","Temperate",0.666666666666667,2,0.716531310573789
+"X-squared...17","LNC","Temperate",0.5,2,0.778800783071405
+"X-squared...18","Root quantity","Temperate",1,1,0.317310507862914
+"X-squared...19","Height","Tropical",2,2,0.367879441171442
+"X-squared...20","SLA","Tropical",0.727272727272727,2,0.695143928398879
+"X-squared...21","LA","Tropical",0.333333333333333,1,0.563702861650773
+"X-squared...22","LDMC","Tropical",2.66666666666667,1,0.102470434859749
+"X-squared...23","LNC","Tropical",3.25,2,0.196911675204194
+"X-squared...24","WD","Tropical",0.142857142857143,1,0.705456986111273
