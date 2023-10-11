@@ -371,3 +371,49 @@ cwm %>%
              subtitle = "Relationship between functional dominance and productivity across different ecosystems and regions")  #%>% 
   #gtsave(filename = "results/cwm.rtf")
 
+ecosystem
+regiao
+chi <- function(data, var, type){
+a = data %>%  
+  filter(Variables == var) %>% 
+  filter(Environment == type)
+b = chisq.test(a$`Number of papers`)
+print(b)
+c = data.frame (Variable = var,
+                Environment = type,
+                X.squared = b$statistic,
+                df = b$parameter,
+                p.value = b$p.value)
+return(c)
+}
+a = chi(ecosystem, var = "Height", type = "Grassland")
+b = chi(ecosystem, var = "SLA", type = "Grassland")
+c = chi(ecosystem, var = "LA", type = "Grassland")
+d = chi(ecosystem, var = "LDMC", type = "Grassland")
+e = chi(ecosystem, var = "LNC", type = "Grassland")
+f = chi(ecosystem, var = "Root quantity", type = "Grassland")
+gr = bind_rows(a,b,c,d,e,f)
+a = chi(ecosystem, var = "Height", type = "Forest")
+b = chi(ecosystem, var = "SLA", type = "Forest")
+c = chi(ecosystem, var = "LA", type = "Forest")
+d = chi(ecosystem, var = "LDMC", type = "Forest")
+e = chi(ecosystem, var = "LNC", type = "Forest")
+f = chi(ecosystem, var = "WD", type = "Forest")
+fr =  bind_rows(a,b,c,d,e,f)
+a = chi(regiao, var = "Height", type = "Temperate")
+b = chi(regiao, var = "SLA", type = "Temperate")
+c = chi(regiao, var = "LA", type = "Temperate")
+d = chi(regiao, var = "LDMC", type = "Temperate")
+e = chi(regiao, var = "LNC", type = "Temperate")
+f = chi(regiao, var = "Root quantity", type = "Temperate")
+te =  bind_rows(a,b,c,d,e,f)
+a = chi(regiao, var = "Height", type = "Tropical")
+b = chi(regiao, var = "SLA", type = "Tropical")
+c = chi(regiao, var = "LA", type = "Tropical")
+d = chi(regiao, var = "LDMC", type = "Tropical")
+e = chi(regiao, var = "LNC", type = "Tropical")
+f = chi(regiao, var = "WD", type = "Tropical")
+tr =  bind_rows(a,b,c,d,e,f)
+
+al= bind_rows(gr,fr,te,tr)
+#write.csv(al, "x2.csv")
