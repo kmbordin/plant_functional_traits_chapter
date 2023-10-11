@@ -1,0 +1,25 @@
+Variable;Environment;X.squared;df;p.value
+Height;Grassland;4.8;2;0.09
+SLA;Grassland;0.4;2;0.82
+LA;Grassland;1.0;1;0.32
+LDMC;Grassland;0.7;2;0.72
+LNC;Grassland;0.7;2;0.72
+Root quantity;Grassland;0.5;1;0.48
+Height;Forest;0.1;1;0.71
+SLA;Forest;0.2;2;0.93
+LA;Forest;0.2;1;0.65
+LDMC;Forest;2.7;1;0.10
+LNC;Forest;2.9;2;0.23
+WD;Forest;0.0;1;1.00
+Height;Temperate;4.8;2;0.09
+SLA;Temperate;0.1;2;0.94
+LA;Temperate;3.0;2;0.22
+LDMC;Temperate;0.7;2;0.72
+LNC;Temperate;0.5;2;0.78
+Root quantity;Temperate;1.0;1;0.32
+Height;Tropical;2.0;2;0.37
+SLA;Tropical;0.7;2;0.70
+LA;Tropical;0.3;1;0.56
+LDMC;Tropical;2.7;1;0.10
+LNC;Tropical;3.3;2;0.20
+WD;Tropical;0.1;1;0.71
