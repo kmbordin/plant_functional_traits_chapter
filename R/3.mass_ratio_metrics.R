@@ -264,7 +264,7 @@ p1 <- ecosystem %>%
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal",title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Variables), scales="free") + 
-  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) + my_theme
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
 
 p2 <- ecosystem_metric_prod %>% 
   ggplot(aes(x=ecosystem, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
@@ -272,7 +272,7 @@ p2 <- ecosystem_metric_prod %>%
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal",title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Variables), scales="free") + 
-  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) + my_theme
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
 
 p3 <- ecosystem_metric_stock %>% 
   ggplot(aes(x=ecosystem, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
@@ -280,7 +280,7 @@ p3 <- ecosystem_metric_stock %>%
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal",title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Variables), scales="free") + 
-  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) + my_theme
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
 
 plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
 # png('results/CWM_estoque_temporal_ecosystem.png', units="in", width=26, height=13, res=300)
@@ -320,7 +320,7 @@ p1 <- regiao %>%
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal",title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Variables), scales="free") + 
-  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) + my_theme
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
 
 p2 <- regiao_metric_prod %>% 
   ggplot(aes(x=regiao, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
@@ -328,7 +328,7 @@ p2 <- regiao_metric_prod %>%
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal",title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Variables), scales="free") + 
-  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) + my_theme
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
 
 p3 <- regiao_metric_stock %>% 
   ggplot(aes(x=regiao, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
@@ -336,10 +336,10 @@ p3 <- regiao_metric_stock %>%
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal",title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Variables), scales="free") + 
-  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0, position=position_stack(vjust=0), colour="black", size=5) + my_theme
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
 
 plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
-# png('results/CWM_estoque_temporal_regiao.png', units="in", width=26, height=13, res=300)
+# png('results/CWM_estoque_temporal_regiao.png', units="in", width=27, height=13, res=300)
 # plots
 # dev.off()
 
@@ -416,4 +416,4 @@ f = chi(regiao, var = "WD", type = "Tropical")
 tr =  bind_rows(a,b,c,d,e,f)
 
 al= bind_rows(gr,fr,te,tr)
-#write.csv(al, "x2.csv")
+#write.csv(al, "results/x2.csv")
