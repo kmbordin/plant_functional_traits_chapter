@@ -5,11 +5,13 @@ regiao_estudo = c("temperate", "tropical", "subtropical")
 ecosys_type= c("forest", "grassland")
 my_theme <- theme_minimal()  +
   theme(legend.position = "bottom",
-        plot.title = element_text(hjust = 0.5,size = 15, face = "bold"),
-        axis.text.x = element_text(size=12),
-        axis.title.y =element_text(size=15), 
-        axis.title.x =element_text(size=15), 
-        strip.text.x = element_text(size = 14))
+        axis.text=element_text(size=15),
+        strip.text = element_text(size = 15), 
+        plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+        axis.title.x = element_text(size = 15),
+        axis.text.x = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        legend.text = element_text(size=13))
 
 # frequencia de  traits usados para calcular o cwm
 cwm.site <- function (x) {
@@ -283,7 +285,7 @@ p3 <- ecosystem_metric_stock %>%
   geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
 
 plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
-# png('results/CWM_estoque_temporal_ecosystem.png', units="in", width=26, height=13, res=300)
+# png('results/CWM_estoque_temporal_ecosystem.png', units="in", width=35, height=12, res=300)
 # plots
 # dev.off()
 
@@ -339,7 +341,7 @@ p3 <- regiao_metric_stock %>%
   geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
 
 plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
-# png('results/CWM_estoque_temporal_regiao.png', units="in", width=27, height=13, res=300)
+# png('results/CWM_estoque_temporal_regiao.png', units="in", width=35, height=12, res=300)
 # plots
 # dev.off()
 

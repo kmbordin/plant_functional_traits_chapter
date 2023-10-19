@@ -200,7 +200,11 @@ themes <- theme_minimal()  +
   theme(legend.position = "bottom",
         axis.text=element_text(size=15),
         strip.text = element_text(size = 15), 
-        plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
+        plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+        axis.title.x = element_text(size = 15),
+        axis.text.x = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        legend.text = element_text(size=13))
 
 p1 = region_all %>% 
 ggplot(aes(x = Region, y= `Frequency (%)` , fill= Relationship))+
@@ -225,7 +229,7 @@ p3 = region_stock %>%
 #p3 = stock
 # library(patchwork)
 plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
-# png('results/FDonprod_temptrop.png', units="in",width=13, height=12, res=300)
+# png('results/FDonprod_temptrop.png', units="in",width=15, height=10, res=300)
 # plots
 # dev.off()
 
@@ -253,6 +257,6 @@ p3 = ecosys_stock %>%
 #p3 = stock
 # library(patchwork)
 plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
-# png('results/FDonprod_ecosys.png', units="in",width=13, height=12, res=300)
+# png('results/FDonprod_ecosys.png',units="in",width=15, height=10, res=300)
 # plots
 # dev.off()
