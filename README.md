@@ -12,7 +12,7 @@ The `R` folder contains:
 
 1.  Scripts to hamonise the dataset
 2.  functional diversity analysis
-3.  functional dominance analysis\
+3.  functional dominance analysis
 
 The `processed_data` folder contains:
 
