@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10904614.svg)](https://doi.org/10.5281/zenodo.10904614)
+
 This repository contains the data and codes from the following book chapter:
 
 **The use of functional traits in assessing productivity in natural ecosystems** by Bordin et al. (2024).
