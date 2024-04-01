@@ -1,9 +1,11 @@
-pacman::p_load(tidyverse,gt,gtExtras,janitor,doBy,here, patchwork)
-# load data and harmonise table -----
-#data <- read.csv(here::here("processed_data", "analises-08.08.23.csv"))
-#data_raw <- read.csv(here::here("processed_data", "total.csv"))
+# Bordin et al.: The use of functional traits in assessing productivity in natural ecosystems
+# Folder to load and harmonise the dataset
 
-# dataset raw -------
+# load packages ------
+pacman::p_load(tidyverse,gt,gtExtras,janitor,doBy,here, patchwork)
+
+# load data and harmonise table -----
+
 data_raw <- read.csv(here::here("processed_data", "analises-12.09.23.csv"))
 
 levels(as.factor(data_raw$tipo_ecossistema.eg.campo.floresta.savana.etc.))
@@ -70,7 +72,7 @@ data <- data_raw %>%
   mutate(ecosystem = replace(ecosystem, ecosystem  %in% ecoton , "ecotones")) %>% 
   mutate(ecosystem = replace(ecosystem, ecosystem  %in% forest , "forest"))
 
-# trait correction -----
+# trait name correction and harmonisation -----
 sla = c("specificleafarea", "SLA","specificleafarea(SLA)")
 
 lm = c("LEAF_MASS", "leaffreshmass","leaf_mass","LM(leafdrymass)")

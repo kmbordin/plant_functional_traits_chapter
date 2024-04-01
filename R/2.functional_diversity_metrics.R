@@ -1,27 +1,34 @@
-# fd evaluation 
-#precisa carregar esse script antes
+# Bordin et al.: The use of functional traits in assessing productivity in natural ecosystems
+# Folder to analyse functional diversity (niche complementarity)
+
+# load these datasets first
 here::here("1.load_harmonise.R")
-#isso e para criar apenas as regioes tropicais e temperadas
+cat = readxl::read_excel(here::here("processed_data", "categorisation.xlsx"))
+
+# tropical and temperate regions ----
 regiao_estudo = c("temperate", "tropical", "subtropical")
 
-#nova matriz, corrigindo e agrupando traits, com a info de regiao
-#essa matriz fica ao final com os traits em linhas, separadamente, além da info de ecossistema e regiao
+# grouping traits -----
 roots = c("Root quantity")
 seeds = c("Seed size")
 life.history = c("Growth rate","Growth form","Tree size")
-#height = c("Height","Crown size")
+# height = c("Height","Crown size")
 stem = c("WD","Vessel quantity","Stress tolerance","Deciduousness")
 leaves = c("LDMC","LT","LM","LA","SLA","LT","LCaC","LNC:LPC","Pigments","LCC:LNC","LCC","LPC","LNC")
-prod_type = c("1","2")
+prod_type = c("1","2") # productivity measure = 1 means rate, 2 means stocks
 regiao_estudo = c("temperate", "tropical", "subtropical")
 ecosys_type= c("forest", "grassland")
 
 region = c("Tropical","subtropical","Temperate")
 ecosys = c("Forest", "Grassland")
-metric = c("1","2")
-data <- data %>% filter(ecosystem %in% ecosys_type)
-data <- data %>% filter(regiao %in% regiao_estudo)
-data <- data %>% filter(prod.metric %in% prod_type)
+metric = c("1","2") #1 means rate, 2 means stocks
+
+# harmonising table for FD analysis ----
+data <- data %>% filter(ecosystem %in% ecosys_type) #filter ecosystems
+data <- data %>% filter(regiao %in% regiao_estudo) #filter study regions
+data <- data %>% filter(prod.metric %in% prod_type) #filter productivity metrics
+
+# new df with variables of interest
 fd <- tibble (traits.fd = data$traits_FD, 
               ecosystem = data$ecosystem,
               region = data$regiao, 
@@ -35,7 +42,7 @@ fd <- tibble (traits.fd = data$traits_FD,
   gather(key = "variable", value = "driver", starts_with("fd"), na.rm = TRUE)%>%
   mutate(across(c(driver), ~str_replace_all(., " ", ""))) %>%
   mutate(driver = replace(driver, driver  %in% sla , "SLA")) %>%
-  mutate(driver = replace(driver, driver  %in% lma , "SLA"))%>% #decidimos tornar LMA para SLA
+  mutate(driver = replace(driver, driver  %in% lma , "SLA"))%>% #SLA = 1/LMA; already transformed
   mutate(driver = replace(driver, driver  %in% ldmc , "LDMC"))%>%
   mutate(driver = replace(driver, driver  %in% lnc , "LNC")) %>%
   mutate(driver = replace(driver, driver  %in% n.c , "LCC:LNC")) %>%
@@ -76,6 +83,7 @@ fd <- tibble (traits.fd = data$traits_FD,
   mutate(relation = replace(relation, relation == "ns", "No relationship")) %>%
   mutate(relation = replace(relation, relation == "positive", "Positive")) 
 
+# grouping per region ----
 region_eval <- fd %>% 
   group_by(region) %>% 
   count(driver) %>%
@@ -83,6 +91,7 @@ region_eval <- fd %>%
   rename(`Trait type` = driver, 
          var = region) 
 
+# grouping per ecosystem ----
 ecosys_eval <- fd %>% 
   group_by(ecosystem) %>% 
   count(driver) %>%
@@ -90,6 +99,7 @@ ecosys_eval <- fd %>%
   rename(`Trait type` = driver, 
          var = ecosystem)  
 
+# grouping per metric ----
 metric_eval <- fd %>% 
   filter(metric != "1,2") %>% 
   group_by(metric) %>% 
@@ -98,8 +108,7 @@ metric_eval <- fd %>%
   rename(`Trait type` = driver, 
          var = metric)  
 
-cat = readxl::read_excel(here::here("results", "categorisation.xlsx"))
-
+# combining datasets and saving table 2 ----
 fd.eval <- bind_rows(ecosys_eval,region_eval, metric_eval) %>% 
   select(-frequencia) %>% 
   pivot_wider(names_from = var,values_from = n) %>% 
@@ -108,8 +117,10 @@ fd.eval <- bind_rows(ecosys_eval,region_eval, metric_eval) %>%
   replace(is.na(.),0) %>% 
   filter(`Trait type` %in% cat$`Traits used in this study`) %>% 
   arrange()
+
 #write.table(fd.eval, "results/fd.eval.txt")
 
+# number of studies of FD per region -----
 n.papers.fd = data %>% 
   drop_na(FD) %>% 
   unique() 
@@ -121,7 +132,7 @@ n.p.trop = n.papers.fd %>%
 n.p.temp = n.papers.fd %>%
   filter(regiao=="temperate") 
 
-
+# new df to use in plots -----
 fd_new <- data %>%  
   mutate(regiao = replace(regiao, regiao == "subtropical" , "tropical")) %>%
   mutate(regiao = replace(regiao, regiao == "tropical" , "Tropical")) %>%
@@ -133,7 +144,6 @@ fd_new <- data %>%
   mutate(FD = replace(FD, FD == "positive", "Positive")) %>% 
   drop_na(FD)
 
-
 eval <- fd_new %>% 
   filter(regiao %in% region) %>%
   filter(ecosystem %in% ecosys) %>% 
@@ -141,12 +151,16 @@ eval <- fd_new %>%
   rename(Region = regiao,
          Ecosystem = ecosystem)
 
+# tests per region ----
+# all regions 
 region_all <- eval %>% 
   group_by(Region, FD) %>% 
   count() %>%
   group_by(Region) %>% 
   mutate(`Frequency (%)` = round((n / sum(n))*100, digits = 0)) %>% 
   rename(Relationship = FD) 
+
+# productivity
 region_prod <- eval %>% 
   filter(prod.metric == "1") %>% 
   group_by(Region, FD) %>% 
@@ -154,6 +168,8 @@ region_prod <- eval %>%
   group_by(Region) %>% 
   mutate(`Frequency (%)` = round((n / sum(n))*100, digits = 0)) %>% 
   rename(Relationship = FD) 
+
+# stock
 region_stock <- eval %>% 
   filter(prod.metric == "2") %>% 
   group_by(Region, FD) %>% 
@@ -162,18 +178,23 @@ region_stock <- eval %>%
   mutate(`Frequency (%)` = round((n / sum(n))*100, digits = 0)) %>% 
   rename(Relationship = FD) 
 
+# chi-square tests for regions -----
 chisq.test(region_all$n) #X-squared = 7, df = 5, p-value = 0.2206
 g = region_all %>% filter(Region == "Temperate") 
 g1 = chisq.test(g$n) #X-squared = 4.3333, df = 2, p-value = 0.114
 f = region_all %>% filter(Region == "Tropical")
 f1 = chisq.test(f$n) #X-squared = 1.8571, df = 2, p-value = 0.395
 
+# tests per ecosystem ----
+# all ecosystems
 ecosys_all <- eval %>% 
   group_by(Ecosystem, FD) %>% 
   count() %>%
   group_by(Ecosystem) %>% 
   mutate(`Frequency (%)` = round((n / sum(n))*100, digits = 0)) %>% 
   rename(Relationship = FD) 
+
+# productivity
 ecosys_prod <- eval %>% 
   filter(prod.metric == "1") %>% 
   group_by(Ecosystem, FD) %>% 
@@ -181,6 +202,8 @@ ecosys_prod <- eval %>%
   group_by(Ecosystem) %>% 
   mutate(`Frequency (%)` = round((n / sum(n))*100, digits = 0)) %>% 
   rename(Relationship = FD) 
+
+# stocks
 ecosys_stock <- eval %>% 
   filter(prod.metric == "2") %>% 
   group_by(Ecosystem, FD) %>% 
@@ -189,13 +212,14 @@ ecosys_stock <- eval %>%
   mutate(`Frequency (%)` = round((n / sum(n))*100, digits = 0)) %>% 
   rename(Relationship = FD) 
 
+# chi-square tests per ecosystems -----
 chisq.test(ecosys_all$n) #X-squared = 7.375, df = 5, p-value = 0.1942
 g = ecosys_all %>% filter(Ecosystem == "Grassland") 
 g1 = chisq.test(g$n) #X-squared = 5.7647, df = 2, p-value = 0.056
 f = ecosys_all %>% filter(Ecosystem == "Forest")
 f1 = chisq.test(f$n) #X-squared = 1.2, df = 2, p-value = 0.5488
 
-
+# figures ------
 themes <- theme_minimal()  + 
   theme(legend.position = "bottom",
         axis.text=element_text(size=15),
@@ -206,24 +230,28 @@ themes <- theme_minimal()  +
         axis.title.y = element_text(size = 15),
         legend.text = element_text(size=13))
 
+# regions ----
 p1 = region_all %>% 
 ggplot(aes(x = Region, y= `Frequency (%)` , fill= Relationship))+
   geom_bar(stat= "identity") +  geom_text(aes(label=n), vjust=-0.2, hjust=0.5, position=position_stack(vjust=0), colour="black", size=10)+themes+scale_x_discrete(limits=rev)+
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal", title.position = "top",title.hjust = 0.5))+
   labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different regions")
+
 p2 = region_prod %>% 
   ggplot(aes(x = Region, y= `Frequency (%)` , fill= Relationship))+
   geom_bar(stat= "identity") +  geom_text(aes(label=n), vjust=-0.2, hjust=0.5, position=position_stack(vjust=0), colour="black", size=10)+themes+scale_x_discrete(limits=rev)+
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal", title.position = "top",title.hjust = 0.5))+
   labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different regions (rate only)") 
+
 p3 = region_stock %>% 
   ggplot(aes(x = Region, y= `Frequency (%)` , fill= Relationship))+
   geom_bar(stat= "identity") +  geom_text(aes(label=n), vjust=-0.2, hjust=0.5, position=position_stack(vjust=0), colour="black", size=10)+themes+scale_x_discrete(limits=rev)+
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal", title.position = "top",title.hjust = 0.5))+
   labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different regions (stock only)")
+
 #p1 = total
 #p2 = temporal
 #p3 = stock
@@ -233,7 +261,7 @@ plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths =
 # plots
 # dev.off()
 
-
+# ecosystems ----
 p1 = ecosys_all %>% 
   ggplot(aes(x = Ecosystem, y= `Frequency (%)` , fill= Relationship))+
   geom_bar(stat= "identity") +  geom_text(aes(label=n), vjust=-0.2, hjust=0.5, position=position_stack(vjust=0), colour="black", size=10)+themes+scale_x_discrete(limits=rev)+

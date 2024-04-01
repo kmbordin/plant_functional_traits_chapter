@@ -1,8 +1,16 @@
-#precisa carregar esse script antes
+# Bordin et al.: The use of functional traits in assessing productivity in natural ecosystems
+# Folder to analyse functional dominance (niche-complementarity)
+
+# load these datasets first
 here::here("1.load_harmonise.R")
-prod_type = c("1","2")
+cat = readxl::read_excel(here::here("processed_data", "categorisation.xlsx"))
+
+# regions, ecosystems, and metrics ----
 regiao_estudo = c("temperate", "tropical", "subtropical")
+prod_type = c("1","2")
 ecosys_type= c("forest", "grassland")
+
+# theme for plots -----
 my_theme <- theme_minimal()  +
   theme(legend.position = "bottom",
         axis.text=element_text(size=15),
@@ -13,7 +21,7 @@ my_theme <- theme_minimal()  +
         axis.title.y = element_text(size = 15),
         legend.text = element_text(size=13))
 
-# frequencia de  traits usados para calcular o cwm
+# function to obtain the trait frequency and calculate the cwms --------
 cwm.site <- function (x) {
   data <- x %>% 
     mutate(ecosystem = replace(ecosystem, ecosystem == "forest", "Forest")) %>%
@@ -25,7 +33,7 @@ cwm.site <- function (x) {
     mutate(Valores = replace(Valores, Valores == "ns", "No relationship")) %>%
     mutate(Valores = replace(Valores, Valores == "positive", "Positive")) %>%
     mutate(Valores = replace(Valores, Valores == "negative", "Negative")) %>%
-    mutate(Variables = replace(Variables, Variables  %in% lma , "SLA"))%>% # SLA como 1/LMA
+    mutate(Variables = replace(Variables, Variables  %in% lma , "SLA"))%>% # SLA = 1/LMA
     mutate(Variables = replace(Variables, Variables  %in% height , "Height")) %>%
     mutate(Variables = replace(Variables, Variables  %in% seed , "Seed size")) %>%
     mutate(Variables = replace(Variables, Variables  %in% crown , "Crown size")) %>%
@@ -51,7 +59,7 @@ cwm.site <- function (x) {
     return(data)
 }
 
-# ifelse para mudar o efeito de LMA para SLA (LMA=1/SLA)
+# ifelse to invert the effect of LMA to SLA
 data$CWM_LMA <- ifelse(data$CWM_LMA == "negative", "MUDAR", data$CWM_LMA) 
 data$CWM_LMA <- ifelse(data$CWM_LMA == "positive", "negative", data$CWM_LMA)
 data$CWM_LMA <- ifelse(data$CWM_LMA == "MUDAR", "positive", data$CWM_LMA)
@@ -62,10 +70,7 @@ data <- data %>% mutate(regiao = replace(regiao, regiao == "subtropical" , "Trop
   mutate(regiao = replace(regiao, regiao == "temperate" , "Temperate")) %>% 
   mutate(regiao = replace(regiao, regiao == "tropical" , "Tropical")) 
 
-#tomatch categories
-cat = readxl::read_excel(here::here("results", "categorisation.xlsx"))
-
-#para tabela total
+# new df - traits and ecosystems ----
 traits_ecosys = data %>% 
   cwm.site() %>% 
   select(-Valores) %>% 
@@ -83,6 +88,7 @@ traits_ecosys = data %>%
   replace(is.na(.),0) %>% 
   arrange(Variables)
 
+# new df - traits and metrics  of productivity -----
 traits_metric <- data %>% 
   cwm.site() %>% 
   mutate(prod.metric = replace(prod.metric, prod.metric == "1" , "Rate")) %>%  
@@ -99,7 +105,8 @@ traits_metric <- data %>%
   pivot_wider(id_cols = c(Variables), names_from = c(prod.metric),values_from = Value) %>% 
     replace(is.na(.),0)%>% 
   arrange(Variables)
- 
+
+# new df - traits and regions ----
 traits_regiao = data %>% 
   cwm.site() %>% 
   select(-Valores) %>% 
@@ -117,12 +124,14 @@ traits_regiao = data %>%
   replace(is.na(.),0) %>% 
   arrange(Variables)
 
+# combining dfs and saving data ------
 a= bind_cols(traits_ecosys,traits_regiao,traits_metric) %>% 
   select(-c(Variables...4, Variables...7)) %>% 
   rename(Trait = Variables...1)
+# save cwm results
 #write.table(a, "results/cwm_eval.txt")
 
-#efeito dos cwm para todos os dois ecossistemas (total)
+# functional dominance across all ecosystems -----
 all = data %>% 
   cwm.site() %>% 
   select(-Valores) %>% 
@@ -143,19 +152,19 @@ filt <- function(data){
     filter(Variables %in% all$Variables)
 } 
 
-#filtra as infos somente para campo
+# functional dominance across grasslands -----
 grass <- data %>% 
   filter (ecosystem=="grassland") %>%
   cwm.site()  %>% filt()%>% 
   mutate(ecosystem = "Grassland")
   
-#filtra as infos para floresta
+# functional dominance across forests -----
 fores <- data %>% 
   filter (ecosystem=="forest") %>% 
   cwm.site()%>% filt() %>% 
   mutate(ecosystem = "Forest")
 
-#filta as infos somente para campo
+# grasslands and productivity
 grass_prod <- data %>% 
   filter (ecosystem=="grassland") %>%
   filter (prod.metric=="1") %>%
@@ -163,6 +172,7 @@ grass_prod <- data %>%
   mutate(ecosystem = "Grassland", 
          metric = "produc") 
 
+# grasslands and stocks
 grass_stock <- data %>% 
   filter (ecosystem=="grassland") %>%
   filter (prod.metric=="2") %>%
@@ -170,7 +180,7 @@ grass_stock <- data %>%
   mutate(ecosystem = "Grassland", 
          metric = "stock")
 
-#filtra as infos para floresta
+# forest productivity
 fores_prod <- data %>% 
   filter (ecosystem=="forest") %>% 
   filter (prod.metric=="1") %>%
@@ -178,6 +188,7 @@ fores_prod <- data %>%
   mutate(ecosystem = "Forest", 
          metric = "produc") 
 
+# forest stocks
 fores_stock <- data %>% 
   filter (ecosystem=="forest") %>% 
   filter (prod.metric=="2") %>%
@@ -185,20 +196,19 @@ fores_stock <- data %>%
   mutate(ecosystem = "Forest", 
          metric = "stock") 
 
-
-#filtra as infos somente para tropical
+# functional dominance across tropical region -----
 trop <- data %>% 
   filter (regiao=="Tropical") %>%
   cwm.site()  %>% filt()%>% 
   mutate(regiao = "Tropical")
 
-#filtra as infos para temperada
+# functional dominance across temperate region -----
 temp <- data %>% 
   filter (regiao =="Temperate") %>% 
   cwm.site()%>% filt() %>% 
   mutate(regiao = "Temperate")
 
-#filta as infos somente para tropical
+# tropical productivity
 trop_prod <- data %>% 
   filter (regiao=="Tropical") %>%
   filter (prod.metric=="1") %>%
@@ -206,6 +216,7 @@ trop_prod <- data %>%
   mutate(regiao = "Tropical", 
          metric = "produc") 
 
+# tropical stocks 
 trop_stock <- data %>% 
   filter (regiao=="Tropical") %>%
   filter (prod.metric=="2") %>%
@@ -213,7 +224,7 @@ trop_stock <- data %>%
   mutate(regiao = "Tropical", 
          metric = "stock")
 
-#filtra as infos para temperada
+# temperate productivity
 temp_prod <- data %>% 
   filter (regiao=="Temperate") %>% 
   filter (prod.metric=="1") %>%
@@ -221,6 +232,7 @@ temp_prod <- data %>%
   mutate(regiao = "Temperate", 
          metric = "produc") 
 
+# temperate stocks
 temp_stock <- data %>% 
   filter (regiao=="Temperate") %>% 
   filter (prod.metric=="2") %>%
@@ -229,6 +241,7 @@ temp_stock <- data %>%
          metric = "stock") %>% 
   rename()
 
+# saving data for table 2 -----
 all %>% 
   gt() %>% 
   tab_header(title = md("**Functional dominance as predictor of productivity**"),
@@ -238,6 +251,7 @@ all %>%
   cols_align(align = "center",columns = everything()) #%>% 
 #gtsave(filename = "results/CWM_effects_semecosys.rtf")
 
+# plots per ecosystem ----
 ecosystem <- bind_rows(grass,fores) %>% 
   group_by(Variables, ecosystem) %>% 
   mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0)) %>% 
@@ -289,7 +303,7 @@ plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths =
 # plots
 # dev.off()
 
-
+# plots per region -----
 regiao <- bind_rows(temp,trop)%>% 
   group_by(Variables, regiao) %>% 
   mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0)) %>% 
@@ -300,7 +314,6 @@ regiao <- bind_rows(temp,trop)%>%
   mutate(frequencia = replace(frequencia, frequencia == "35" , "35.5"))%>%
   mutate(frequencia = replace(frequencia, frequencia == "27" , "27.5"))%>%
   mutate(frequencia = as.numeric(frequencia))
-
 
 regiao_metric_prod <-  bind_rows(temp_prod, trop_prod) %>% 
   group_by(Variables, regiao, metric) %>% 
@@ -345,6 +358,7 @@ plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths =
 # plots
 # dev.off()
 
+# all functional dominance results ------
 ecosystem <- ecosystem %>% 
   rename(Environment = ecosystem)
 regiao <- regiao %>% 
@@ -373,8 +387,7 @@ cwm %>%
              subtitle = "Relationship between functional dominance and productivity across different ecosystems and regions")  #%>% 
   #gtsave(filename = "results/cwm.rtf")
 
-ecosystem
-regiao
+# chi-squares of traits among regions and ecosystems ----- 
 chi <- function(data, var, type){
 a = data %>%  
   filter(Variables == var) %>% 
