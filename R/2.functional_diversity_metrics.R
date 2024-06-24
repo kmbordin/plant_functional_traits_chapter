@@ -236,21 +236,30 @@ ggplot(aes(x = Region, y= `Frequency (%)` , fill= Relationship))+
   geom_bar(stat= "identity") +  geom_text(aes(label=n), vjust=-0.2, hjust=0.5, position=position_stack(vjust=0), colour="black", size=10)+themes+scale_x_discrete(limits=rev)+
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal", title.position = "top",title.hjust = 0.5))+
-  labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different regions")
+  labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different regions")+
+  theme(legend.title = element_text(size=16), #change legend title font size
+        legend.text = element_text(size=16),
+        axis.text=element_text(size=16))
 
 p2 = region_prod %>% 
   ggplot(aes(x = Region, y= `Frequency (%)` , fill= Relationship))+
   geom_bar(stat= "identity") +  geom_text(aes(label=n), vjust=-0.2, hjust=0.5, position=position_stack(vjust=0), colour="black", size=10)+themes+scale_x_discrete(limits=rev)+
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal", title.position = "top",title.hjust = 0.5))+
-  labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different regions (rate only)") 
+  labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different regions (rate only)") +
+  theme(legend.title = element_text(size=16), #change legend title font size
+        legend.text = element_text(size=16),
+        axis.text=element_text(size=16))
 
 p3 = region_stock %>% 
   ggplot(aes(x = Region, y= `Frequency (%)` , fill= Relationship))+
   geom_bar(stat= "identity") +  geom_text(aes(label=n), vjust=-0.2, hjust=0.5, position=position_stack(vjust=0), colour="black", size=10)+themes+scale_x_discrete(limits=rev)+
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal", title.position = "top",title.hjust = 0.5))+
-  labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different regions (stock only)")
+  labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different regions (stock only)")+
+  theme(legend.title = element_text(size=16), #change legend title font size
+        legend.text = element_text(size=16),
+        axis.text=element_text(size=16))
 
 #p1 = total
 #p2 = temporal
@@ -267,19 +276,28 @@ p1 = ecosys_all %>%
   geom_bar(stat= "identity") +  geom_text(aes(label=n), vjust=-0.2, hjust=0.5, position=position_stack(vjust=0), colour="black", size=10)+themes+scale_x_discrete(limits=rev)+
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal", title.position = "top",title.hjust = 0.5))+
-  labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different ecosystems")
+  labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different ecosystems")+
+  theme(legend.title = element_text(size=16), #change legend title font size
+        legend.text = element_text(size=16),
+        axis.text=element_text(size=16))
 p2 = ecosys_prod %>% 
   ggplot(aes(x = Ecosystem, y= `Frequency (%)` , fill= Relationship))+
   geom_bar(stat= "identity") +  geom_text(aes(label=n), vjust=-0.2, hjust=0.5, position=position_stack(vjust=0), colour="black", size=10)+themes+scale_x_discrete(limits=rev)+
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal", title.position = "top",title.hjust = 0.5))+
-  labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different ecosystems (rate only)") 
+  labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different ecosystems (rate only)") +
+  theme(legend.title = element_text(size=16), #change legend title font size
+        legend.text = element_text(size=16),
+        axis.text=element_text(size=16))
 p3 = ecosys_stock %>% 
   ggplot(aes(x = Ecosystem, y= `Frequency (%)` , fill= Relationship))+
   geom_bar(stat= "identity") +  geom_text(aes(label=n), vjust=-0.2, hjust=0.5, position=position_stack(vjust=0), colour="black", size=10)+themes+scale_x_discrete(limits=rev)+
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal", title.position = "top",title.hjust = 0.5))+
-  labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different ecosystems (stock only)")
+  labs(x = "", y = "Frequency (%)", title = "Relationship between functional diversity and productivity \n across different ecosystems (stock only)")+
+  theme(legend.title = element_text(size=16), #change legend title font size
+        legend.text = element_text(size=16),
+        axis.text=element_text(size=16))
 #p1 = total
 #p2 = temporal
 #p3 = stock

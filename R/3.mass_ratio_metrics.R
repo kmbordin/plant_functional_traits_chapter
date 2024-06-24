@@ -260,19 +260,27 @@ ecosystem <- bind_rows(grass,fores) %>%
   mutate(frequencia = replace(frequencia, frequencia == "44" , "45"))%>%
   mutate(frequencia = replace(frequencia, frequencia == "62" , "63"))%>%
   mutate(frequencia = replace(frequencia, frequencia == "23" , "22"))%>%
-  mutate(frequencia = as.numeric(frequencia))
-
+  mutate(frequencia = as.numeric(frequencia)) %>% 
+  mutate(ecosystem = replace(ecosystem, ecosystem == "Forest" , "F")) %>% 
+  mutate(ecosystem = replace(ecosystem, ecosystem == "Grassland" , "G"))%>% 
+  mutate(Variables = replace(Variables, Variables == "Root quantity" , "Root"))
 ecosystem_metric_prod <-  bind_rows(grass_prod,fores_prod) %>%
   group_by(Variables, ecosystem,metric) %>% 
   mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0)) %>% 
-  rename(Relationship = Valores)
+  rename(Relationship = Valores)%>% 
+  mutate(ecosystem = replace(ecosystem, ecosystem == "Forest" , "F")) %>% 
+  mutate(ecosystem = replace(ecosystem, ecosystem == "Grassland" , "G")) %>% 
+  mutate(Variables = replace(Variables, Variables == "Root quantity" , "Root"))
 
 ecosystem_metric_stock <-  bind_rows(grass_stock,fores_stock) %>%
   group_by(Variables, ecosystem,metric) %>% 
   mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0)) %>% 
   rename(Relationship = Valores) %>% 
   mutate(frequencia = replace(frequencia, frequencia == "38" , "37.5"))%>%
-  mutate(frequencia = as.numeric(frequencia))
+  mutate(frequencia = as.numeric(frequencia))%>% 
+  mutate(ecosystem = replace(ecosystem, ecosystem == "Forest" , "F")) %>% 
+  mutate(ecosystem = replace(ecosystem, ecosystem == "Grassland" , "G"))%>% 
+  mutate(Variables = replace(Variables, Variables == "Root quantity" , "Root"))
 
 p1 <- ecosystem %>% 
   ggplot(aes(x=ecosystem, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
@@ -280,7 +288,10 @@ p1 <- ecosystem %>%
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal",title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Variables), scales="free") + 
-  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme+
+  theme(legend.title = element_text(size=16), #change legend title font size
+        legend.text = element_text(size=16),
+        axis.text=element_text(size=16))
 
 p2 <- ecosystem_metric_prod %>% 
   ggplot(aes(x=ecosystem, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
@@ -288,7 +299,10 @@ p2 <- ecosystem_metric_prod %>%
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal",title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Variables), scales="free") + 
-  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme+
+  theme(legend.title = element_text(size=16), #change legend title font size
+        legend.text = element_text(size=16),
+        axis.text=element_text(size=16))
 
 p3 <- ecosystem_metric_stock %>% 
   ggplot(aes(x=ecosystem, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
@@ -296,10 +310,13 @@ p3 <- ecosystem_metric_stock %>%
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal",title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Variables), scales="free") + 
-  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme+
+  theme(legend.title = element_text(size=16), #change legend title font size
+        legend.text = element_text(size=16),
+        axis.text=element_text(size=16))
 
 plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
-# png('results/CWM_estoque_temporal_ecosystem.png', units="in", width=35, height=12, res=300)
+# png('results/CWM_estoque_temporal_ecosystem.png', units="in", width=12, height=10, res=300)
 # plots
 # dev.off()
 
@@ -313,21 +330,30 @@ regiao <- bind_rows(temp,trop)%>%
   mutate(frequencia = replace(frequencia, frequencia == "12" , "13"))%>%
   mutate(frequencia = replace(frequencia, frequencia == "35" , "35.5"))%>%
   mutate(frequencia = replace(frequencia, frequencia == "27" , "27.5"))%>%
-  mutate(frequencia = as.numeric(frequencia))
+  mutate(frequencia = as.numeric(frequencia))%>% 
+  mutate(regiao = replace(regiao, regiao == "Temperate" , "Te")) %>% 
+  mutate(regiao = replace(regiao, regiao == "Tropical" , "Tr")) %>% 
+  mutate(Variables = replace(Variables, Variables == "Root quantity" , "Root"))
 
 regiao_metric_prod <-  bind_rows(temp_prod, trop_prod) %>% 
   group_by(Variables, regiao, metric) %>% 
   mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0)) %>% 
   rename(Relationship = Valores)%>% 
   mutate(frequencia = replace(frequencia, frequencia == "33" , "33.3"))%>%
-  mutate(frequencia = as.numeric(frequencia))
+  mutate(frequencia = as.numeric(frequencia))%>% 
+  mutate(regiao = replace(regiao, regiao == "Temperate" , "Te")) %>% 
+  mutate(regiao = replace(regiao, regiao == "Tropical" , "Tr")) %>% 
+  mutate(Variables = replace(Variables, Variables == "Root quantity" , "Root"))
 
 regiao_metric_stock <-  bind_rows(temp_stock, trop_stock) %>% 
   group_by(Variables, regiao, metric) %>% 
   mutate(frequencia = round((`Number of papers`/sum(`Number of papers`) * 100), digits = 0)) %>% 
   rename(Relationship = Valores)%>% 
   mutate(frequencia = replace(frequencia, frequencia == "67" , "66"))%>%
-  mutate(frequencia = as.numeric(frequencia))
+  mutate(frequencia = as.numeric(frequencia))%>% 
+  mutate(regiao = replace(regiao, regiao == "Temperate" , "Te")) %>% 
+  mutate(regiao = replace(regiao, regiao == "Tropical" , "Tr")) %>% 
+  mutate(Variables = replace(Variables, Variables == "Root quantity" , "Root"))
 
 p1 <- regiao %>% 
   ggplot(aes(x=regiao, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
@@ -335,7 +361,10 @@ p1 <- regiao %>%
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal",title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Variables), scales="free") + 
-  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme+
+  theme(legend.title = element_text(size=16), #change legend title font size
+        legend.text = element_text(size=16),
+        axis.text=element_text(size=16))
 
 p2 <- regiao_metric_prod %>% 
   ggplot(aes(x=regiao, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
@@ -343,7 +372,10 @@ p2 <- regiao_metric_prod %>%
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal",title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Variables), scales="free") + 
-  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme+
+  theme(legend.title = element_text(size=16), #change legend title font size
+        legend.text = element_text(size=16),
+        axis.text=element_text(size=16))
 
 p3 <- regiao_metric_stock %>% 
   ggplot(aes(x=regiao, y=frequencia, fill=Relationship))+geom_bar(stat= "identity") +
@@ -351,10 +383,13 @@ p3 <- regiao_metric_stock %>%
   scale_fill_manual(values = c("#AA4499","#888888","#44AA99"),guide = guide_legend(
     direction = "horizontal",title.position = "top",title.hjust = 0.5))+ 
   facet_grid(facets = ~(Variables), scales="free") + 
-  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme
+  geom_text(aes(label=`Number of papers`), vjust=-0.5, hjust=0.5, position=position_stack(vjust=0), colour="black", size=8) + my_theme+
+  theme(legend.title = element_text(size=16), #change legend title font size
+        legend.text = element_text(size=16),
+        axis.text=element_text(size=16))
 
 plots = (p1|(p2/p3)) +plot_annotation(tag_levels = c("A"))+ plot_layout(widths = c(1, 1))
-# png('results/CWM_estoque_temporal_regiao.png', units="in", width=35, height=12, res=300)
+# png('results/CWM_estoque_temporal_regiao.png', units="in", width=12, height=10, res=300)
 # plots
 # dev.off()
 
